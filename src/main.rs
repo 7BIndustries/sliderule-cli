@@ -69,6 +69,42 @@ fn create_component() {
     else {
         println!("components directory already exists, using existing directory.")
     }
+
+    // Create the dist directory, if needed
+    if !Path::new("dist").exists() {
+        match fs::create_dir("dist") {
+            Ok(dir) => dir,
+            Err(_) => return
+        };
+    }
+    else {
+        println!("dist directory already exists, using existing directory.")
+    }
+
+    // Create the docs directory, if needed
+    if !Path::new("docs").exists() {
+        match fs::create_dir("docs") {
+            Ok(dir) => dir,
+            Err(_) => return
+        };
+    }
+    else {
+        println!("docs directory already exists, using existing directory.")
+    }
+
+    //Create the source directory, if needed
+    if !Path::new("source").exists() {
+        match fs::create_dir("source") {
+            Ok(dir) => dir,
+            Err(_) => return
+        };
+    }
+    else {
+        println!("source directory already exists, using existing directory.")
+    }
+
+    // Generate the template readme file
+    generate_readme(&url);
 }
 
 /*
@@ -93,5 +129,28 @@ fn git_init(url: &str) {
     }
     else {
         println!("WARNING: Directory {} already initialized as a git repository.", path.display());
+    }
+}
+
+/*
+ * Generates a template README.md file to help the user get started.
+ */
+fn generate_readme(url: &str) {
+    let name = url.split("/").last().unwrap().trim();
+
+    if !Path::new("README.md").exists() {
+        let mut contents: String = "# ".to_owned();
+        contents.push_str(name);
+        let append: &str = "\r\nNew Sliderule DOF component.\r\n";
+        contents.push_str(append);
+
+        // Write the temmplate text into the readme file
+        match fs::write("README.md", contents) {
+            Ok(res) => res,
+            Err(_) => return 
+        };
+    }
+    else {
+        println!("README.md already exists, using existing file and refusting to overwrite.");
     }
 }
