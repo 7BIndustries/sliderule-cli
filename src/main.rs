@@ -105,6 +105,9 @@ fn create_component() {
 
     // Generate the template readme file
     generate_readme(&url);
+
+    // Generate bom_data.yaml
+    generate_bom(&url);
 }
 
 /*
@@ -136,11 +139,12 @@ fn git_init(url: &str) {
  * Generates a template README.md file to help the user get started.
  */
 fn generate_readme(url: &str) {
-    let name = url.split("/").last().unwrap().trim();
+    let last_path_part = url.split("/").last().unwrap().trim();
+    let name = str::replace(last_path_part, ".git", "");
 
     if !Path::new("README.md").exists() {
         let mut contents: String = "# ".to_owned();
-        contents.push_str(name);
+        contents.push_str(&name);
         let append: &str = "\r\nNew Sliderule DOF component.\r\n";
         contents.push_str(append);
 
@@ -152,5 +156,26 @@ fn generate_readme(url: &str) {
     }
     else {
         println!("README.md already exists, using existing file and refusting to overwrite.");
+    }
+}
+
+fn generate_bom(url: &str) {
+    let last_path_part = url.split("/").last().unwrap().trim();
+    let name = str::replace(last_path_part, ".git", "");
+
+    if !Path::new("bom_data.yaml").exists() {
+        let mut contents: String = "# Bill of Materials for ".to_owned();
+        contents.push_str(&name);
+        let append: &str = "\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n";
+        contents.push_str(append);
+
+        // Write the temmplate text into the readme file
+        match fs::write("bom_data.yaml", contents) {
+            Ok(res) => res,
+            Err(_) => return 
+        };
+    }
+    else {
+        println!("bom_data.yaml already exists, using existing file and refusing to overwrite.");
     }
 }
