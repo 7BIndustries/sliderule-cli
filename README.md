@@ -24,7 +24,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 1. Create a version controlled repository for the project on a personal server or site like [GitHub](https://github.com).
 2. Create a directory with the same name as the new repository, and change (`cd`) into that directory.
 3. Run `sliderule-cli create`, and supply the URL of the repository created in step 1 when prompted.
-4. Use `sliderule-cli add_component` to begin placing components with the project. In this step sliderule-cli will ask you to supply the URL of a remote component, or a name for the component to create it locally.
+4. Use `sliderule-cli add_component` to begin placing components with the project. In this step sliderule-cli will ask you to supply the URL of a remote component, or a name for the component to create locally.
 5. Add and change project source files in each component as needed to complete your design.
 6. Use `sliderule-cli update`to pull the latest changes for any remote componenets, and update any auto-generated files within the project and place them in the `dist` directory.
 7. Use `sliderule-cli upload` to add a message and upload all of the changes made within the project's file structure to the remote repository.
