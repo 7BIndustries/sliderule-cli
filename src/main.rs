@@ -26,10 +26,12 @@ fn main() {
 
     // Handle the command line arguments
     if command == "create" {
+        create_component();
+    }
+    else if command == "add_component" {
         // The argument after the new command should be the name of the new component
         // let name = &args[0];
 
-        create_component();
         // create_new_component(&name);
     }
     else {
@@ -53,7 +55,11 @@ fn create_component() {
     if url.contains("git") {
         println!("Setting up new componenet using git.");
 
+        // Set the current directory up as a git repo
         git_init(&url);
+
+        // Make sure we have an appropriate gitignore file
+        generate_gitignore();
     }
     else {
         println!("ERROR: URL not recognized as a valid repository.");
@@ -119,8 +125,6 @@ fn create_component() {
 
     // Generate package.json
     generate_package_json(&url);
-
-    // TODO: Generate .gitignore during git_init
 }
 
 /*
@@ -217,5 +221,22 @@ fn generate_package_json(url: &str) {
     }
     else {
         println!("package.json already exists, using existing file and refusting to overwrite.");
+    }
+}
+
+fn generate_gitignore() {
+    if !Path::new(".gitignore").exists() {
+        let contents: String = "# Dependency directories\r\nnode_modules/\r\n\r\n# Distribution directory\r\ndist/\r\n".to_owned();
+
+        // Write the contents to the file
+        match fs::write(".gitignore", contents) {
+            Ok(res) => res,
+            Err(error) => {
+                println!("Cound not write to .gitignore: {:?}", error);
+            }
+        };
+    }
+    else {
+        println!(".gitignore already exists, using existing file and refusing to overwrite.");
     }
 }
