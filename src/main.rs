@@ -63,7 +63,9 @@ fn create_component() {
     if !Path::new("components").exists() {
         match fs::create_dir("components") {
             Ok(dir) => dir,
-            Err(_) => return
+            Err(error) => {
+                println!("ERROR: Could not create components directory: {:?}", error);
+            }
         };
     }
     else {
@@ -74,7 +76,9 @@ fn create_component() {
     if !Path::new("dist").exists() {
         match fs::create_dir("dist") {
             Ok(dir) => dir,
-            Err(_) => return
+            Err(error) => {
+                println!("ERROR: Could not create dist directory: {:?}", error);
+            }
         };
     }
     else {
@@ -85,7 +89,9 @@ fn create_component() {
     if !Path::new("docs").exists() {
         match fs::create_dir("docs") {
             Ok(dir) => dir,
-            Err(_) => return
+            Err(error) => {
+                println!("ERROR: Could not create docs directory: {:?}", error);
+            }
         };
     }
     else {
@@ -96,7 +102,9 @@ fn create_component() {
     if !Path::new("source").exists() {
         match fs::create_dir("source") {
             Ok(dir) => dir,
-            Err(_) => return
+            Err(error) => {
+                println!("ERROR: Could not create source directory: {:?}", error);
+            }
         };
     }
     else {
@@ -108,6 +116,11 @@ fn create_component() {
 
     // Generate bom_data.yaml
     generate_bom(&url);
+
+    // Generate package.json
+    generate_package_json(&url);
+
+    // TODO: Generate .gitignore during git_init
 }
 
 /*
@@ -151,7 +164,9 @@ fn generate_readme(url: &str) {
         // Write the temmplate text into the readme file
         match fs::write("README.md", contents) {
             Ok(res) => res,
-            Err(_) => return 
+            Err(error) => {
+                println!("Could not write to README.md file: {:?}", error);
+            } 
         };
     }
     else {
@@ -172,10 +187,35 @@ fn generate_bom(url: &str) {
         // Write the temmplate text into the readme file
         match fs::write("bom_data.yaml", contents) {
             Ok(res) => res,
-            Err(_) => return 
+            Err(error) => {
+                println!("Cound not write to bom_data.yaml: {:?}", error);
+            } 
         };
     }
     else {
         println!("bom_data.yaml already exists, using existing file and refusing to overwrite.");
+    }
+}
+
+fn generate_package_json(url: &str) {
+    let name = url.split("/").last().unwrap().trim();
+    let name = str::replace(name, ".git", "");
+
+    if !Path::new("package.json").exists() {
+        let mut contents: String = "{\r\n  \"name\": \"".to_owned();
+        contents.push_str(&name);
+        let append: &str = "\",\r\n  \"version\": \"1.0.0\",\r\n  \"description\": \"Sliderule DOF component.\",\r\n  \"dependencies\": {\r\n  }\r\n}\r\n";
+        contents.push_str(append);
+
+        // Write the contents into the file
+        match fs::write("package.json", contents) {
+            Ok(res) => res,
+            Err(error) => {
+                println!("Could not write to package.json: {:?}", error);
+            }
+        };
+    }
+    else {
+        println!("package.json already exists, using existing file and refusting to overwrite.");
     }
 }
