@@ -13,7 +13,7 @@ If Rust is installed on a Linux, Windows or Mac computer, running the following 
 ```
 cargo build
 ```
-Once the build has completed successfully, the sliderule-cli binary (sliderule.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary (sliderule.exe on Windows) to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
+Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
 
 ## Usage
 
