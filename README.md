@@ -9,7 +9,7 @@ This is a reference implementation for the open [sliderule methodology](https://
 
 Binaries will be avaiable shortly for Linux, Windows and MacOS.
 
-If Rust is installed on a Linux, Windows or Mac computer, running the following should build the program.
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program.
 ```
 cargo build
 ```
