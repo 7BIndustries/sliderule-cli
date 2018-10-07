@@ -24,15 +24,28 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
+    let mut component_info = String::new();
+
     // Handle the command line arguments
     if command == "create" {
-        create_component();
+        component_info = String::from("sliderule-cli_new_project");
+
+        create_component(&component_info, true);
     }
     else if command == "add_component" {
-        // The argument after the new command should be the name of the new component
-        // let name = &args[0];
+        println!("Enter a name of a new local component, or a URL for a remote component to download: ");
 
-        // create_new_component(&name);
+        io::stdin().read_line(&mut component_info)
+            .expect("Failed to read name or URL from user.");
+
+        if component_info.contains("/") {
+            // TODO: We have a remote URL, install using npm
+            // npm_install(component_info);
+        }
+        else {
+            // The user wants to create a local component
+            create_component(&component_info.trim().to_string(), false);
+        }
     }
     else {
         println!("Command not recognized: {}", command);
@@ -42,27 +55,54 @@ fn main() {
 /*
  * Create a new Sliderule component or convert an existing project to being a Sliderule project.
  */
-// fn create_new_component(name: &str) {
-fn create_component() {
-    println!("Enter the URL of the repository that you previously created for this project: ");
-
+fn create_component(component_info: &String, init_remote: bool) {
     let mut url = String::new();
+    let mut component_name = component_info.to_string();
 
-    io::stdin().read_line(&mut url)
-        .expect("Failed to read line from user");
+    // TODO: Make new directory in components and cd into it unless this is a project level repo
+    if component_info != "sliderule-cli_new_project" {
+        // let mut component_dir_str: String = "components/".to_owned();
+        // component_dir_str.push_str(&component_info);
+        let component_dir_str = format!("components/{}", component_info);
 
-    // Figure out what type of repository we're working with
-    if url.contains("git") {
-        println!("Setting up new componenet using git.");
+        // Create a directory for our component inside the components directory
+        match fs::create_dir(component_dir_str) {
+            Ok(dir) => dir,
+            Err(error) => {
+                println!("ERROR: Could not create dist directory: {:?}", error);
+            }
+        };
 
-        // Set the current directory up as a git repo
-        git_init(&url);
-
-        // Make sure we have an appropriate gitignore file
-        generate_gitignore();
+        // Make a new directory in componenets, cd into it, and then run the rest of this code
+        let components_dir = Path::new("components").join(component_info);
+        match env::set_current_dir(&components_dir) {
+            Ok(dir) => dir,
+            Err(_) => {
+                println!("Could not change into components directory. Has this project been initialized as a Sliderule project?");
+            }
+        };
     }
-    else {
-        println!("ERROR: URL not recognized as a valid repository.");
+
+    // See if we need to set up a repository for this component
+    if init_remote == true {
+        println!("Enter the URL of the repository that you previously created for this project: ");
+
+        io::stdin().read_line(&mut url)
+            .expect("Failed to read line from user");
+
+        // Figure out what type of repository we're working with
+        if url.contains("git") {
+            println!("Setting up new componenet using git.");
+
+            // Set the current directory up as a git repo
+            git_init(&url);
+
+            // Make sure we have an appropriate gitignore file
+            generate_gitignore();
+        }
+        else {
+            println!("ERROR: URL not recognized as a valid repository.");
+        }
     }
 
     // Create the components directory, if needed
@@ -117,14 +157,24 @@ fn create_component() {
         println!("source directory already exists, using existing directory.")
     }
 
+    if init_remote == true {
+        let last_path_part = url.split("/").last().unwrap().trim();
+        component_name = str::replace(last_path_part, ".git", "");
+    }
+
     // Generate the template readme file
-    generate_readme(&url);
+    generate_readme(&component_name);
 
     // Generate bom_data.yaml
-    generate_bom(&url);
+    generate_bom(&component_name);
 
-    // Generate package.json
-    generate_package_json(&url);
+    // If we're not setting this component up to be a remote component, we don't want a package.json
+    if init_remote == true {
+        // Generate package.json
+        generate_package_json(&component_name);
+    }
+
+    println!("Finished setting up component.");
 }
 
 /*
@@ -155,10 +205,7 @@ fn git_init(url: &str) {
 /*
  * Generates a template README.md file to help the user get started.
  */
-fn generate_readme(url: &str) {
-    let last_path_part = url.split("/").last().unwrap().trim();
-    let name = str::replace(last_path_part, ".git", "");
-
+fn generate_readme(name: &str) {
     if !Path::new("README.md").exists() {
         let mut contents: String = "# ".to_owned();
         contents.push_str(&name);
@@ -178,10 +225,7 @@ fn generate_readme(url: &str) {
     }
 }
 
-fn generate_bom(url: &str) {
-    let last_path_part = url.split("/").last().unwrap().trim();
-    let name = str::replace(last_path_part, ".git", "");
-
+fn generate_bom(name: &str) {
     if !Path::new("bom_data.yaml").exists() {
         let mut contents: String = "# Bill of Materials for ".to_owned();
         contents.push_str(&name);
@@ -201,10 +245,7 @@ fn generate_bom(url: &str) {
     }
 }
 
-fn generate_package_json(url: &str) {
-    let name = url.split("/").last().unwrap().trim();
-    let name = str::replace(name, ".git", "");
-
+fn generate_package_json(name: &str) {
     if !Path::new("package.json").exists() {
         let mut contents: String = "{\r\n  \"name\": \"".to_owned();
         contents.push_str(&name);
