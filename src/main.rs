@@ -48,6 +48,10 @@ fn main() {
             create_component(&component_info.trim().to_string(), false);
         }
     }
+    else if command == "update" {
+        // Just have npm update the entire project, not install a specific package
+        npm_install("");
+    }
     else {
         println!("Command not recognized: {}", command);
     }
@@ -282,10 +286,27 @@ fn generate_gitignore() {
  * Attemps to use npm, if installed, otherwise tries to mimic what npm would do.
  */
 fn npm_install(url: &str) {
-    // let command = format!("npm install --save {}", url);
+    let mut vec = Vec::new();
+    vec.push("install");
+    // let mut args = ["install"];
 
-    match Command::new("npm").args(&["install", "--save", url]).spawn() {
-        Ok(_) => println!("Component installed from remote repository."),
+    // If no URL was specified, just npm update the whole project
+    if !url.is_empty() {
+        vec.push("--save");
+        vec.push(url);
+    }
+
+    println!("Working...");
+
+    match Command::new("npm").args(&vec).output() {
+        Ok(_) => {
+            if !url.is_empty() {
+                println!("Component installed from remote repository.");
+            }
+            else {
+                println!("Sliderule project updated.");
+            }
+        },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
                 println!("`npm` was not found, falling back to internal npm implementation.");
