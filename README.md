@@ -32,8 +32,8 @@ Everything in Sliderule is a component, even the top level "project" component t
 ### Command Listing
 - `sliderule-cli create` - Initializes a directory as a new Sliderule project, creating files and directories as needed to match the methodology.
 - `sliderule-cli add_component` - Asks for a component name or URL. Downloads a remote component if a URL is suppplied, or adds a local component labeled with the name provided.
+- `sliderule-cli update` - Updates a Sliderule project recursively, pulling all remote component changes, and then renders all documentation according to the source.
 - _Future:_ `sliderule-cli upload -m [message]` - Commits and pushes a project to git recursively, assuming the master branch. _Future:_ It will commit and push all components recursively, dealing with only the components/repos the user has access to.
-- _Future:_ `sliderule-cli update` - Updates a Sliderule project recursively, pulling all remote component changes, and then renders all documentation according to the source.
 - _Future:_ `sliderule-cli clone [URL]` - Clones a Sliderule project recursively, downloading all components.
 - _Future:_ `sliderule-cli remove_component [name]` - Removes the named component from a project. The name can refer to either a local or remote component.
 - _Future:_ `sliderule-cli component refactor [name] [URL]` - Sets up and initializes a local component as a remote component. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
