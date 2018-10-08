@@ -36,4 +36,4 @@ Everything in Sliderule is a component, even the top level "project" component t
 - _Future:_ `sliderule-cli update` - Updates a Sliderule project recursively, pulling all remote component changes, and then renders all documentation according to the source.
 - _Future:_ `sliderule-cli clone [URL]` - Clones a Sliderule project recursively, downloading all components.
 - _Future:_ `sliderule-cli remove_component [name]` - Removes the named component from a project. The name can refer to either a local or remote component.
-_Future:_ `sliderule-cli component refactor [name] [URL]` - Sets up and initializes a local component as a remote component. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
+- _Future:_ `sliderule-cli component refactor [name] [URL]` - Sets up and initializes a local component as a remote component. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
