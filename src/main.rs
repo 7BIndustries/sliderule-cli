@@ -5,6 +5,7 @@ use std::io;
 use std::env;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 use argparse::{ArgumentParser, Store, List};
 use git2::{Repository};
 
@@ -39,8 +40,8 @@ fn main() {
             .expect("Failed to read name or URL from user.");
 
         if component_info.contains("/") {
-            // TODO: We have a remote URL, install using npm
-            // npm_install(component_info);
+            // We have a remote URL, install using npm
+            npm_install(&component_info);
         }
         else {
             // The user wants to create a local component
@@ -257,6 +258,9 @@ fn generate_package_json(name: &str) {
     }
 }
 
+/*
+ * Generates the .gitignore file used by the git command to ignore files and directories.
+ */
 fn generate_gitignore() {
     if !Path::new(".gitignore").exists() {
         let contents: String = "# Dependency directories\r\nnode_modules/\r\n\r\n# Distribution directory\r\ndist/\r\n".to_string();
@@ -271,5 +275,25 @@ fn generate_gitignore() {
     }
     else {
         println!(".gitignore already exists, using existing file and refusing to overwrite.");
+    }
+}
+
+/*
+ * Attemps to use npm, if installed, otherwise tries to mimic what npm would do.
+ */
+fn npm_install(url: &str) {
+    // let command = format!("npm install --save {}", url);
+
+    match Command::new("npm").args(&["install", "--save", url]).spawn() {
+        Ok(_) => println!("Component installed from remote repository."),
+        Err(e) => {
+            if let std::io::ErrorKind::NotFound = e.kind() {
+                println!("`npm` was not found, falling back to internal npm implementation.");
+
+                // TODO: Call internal npm implementation here
+            } else {
+                println!("Could not install component from remote repository.");
+            }
+        }
     }
 }
