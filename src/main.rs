@@ -61,8 +61,6 @@ fn create_component(component_info: &String, init_remote: bool) {
 
     // TODO: Make new directory in components and cd into it unless this is a project level repo
     if component_info != "sliderule-cli_new_project" {
-        // let mut component_dir_str: String = "components/".to_owned();
-        // component_dir_str.push_str(&component_info);
         let component_dir_str = format!("components/{}", component_info);
 
         // Create a directory for our component inside the components directory
@@ -207,10 +205,7 @@ fn git_init(url: &str) {
  */
 fn generate_readme(name: &str) {
     if !Path::new("README.md").exists() {
-        let mut contents: String = "# ".to_owned();
-        contents.push_str(&name);
-        let append: &str = "\r\nNew Sliderule DOF component.\r\n";
-        contents.push_str(append);
+        let contents = format!("# {}\r\nNew Sliderule DOF component.\r\n", name);
 
         // Write the temmplate text into the readme file
         match fs::write("README.md", contents) {
@@ -227,10 +222,7 @@ fn generate_readme(name: &str) {
 
 fn generate_bom(name: &str) {
     if !Path::new("bom_data.yaml").exists() {
-        let mut contents: String = "# Bill of Materials for ".to_owned();
-        contents.push_str(&name);
-        let append: &str = "\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n";
-        contents.push_str(append);
+        let contents = format!("# Bill of Materials for {}\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n", name);
 
         // Write the temmplate text into the readme file
         match fs::write("bom_data.yaml", contents) {
@@ -267,7 +259,7 @@ fn generate_package_json(name: &str) {
 
 fn generate_gitignore() {
     if !Path::new(".gitignore").exists() {
-        let contents: String = "# Dependency directories\r\nnode_modules/\r\n\r\n# Distribution directory\r\ndist/\r\n".to_owned();
+        let contents: String = "# Dependency directories\r\nnode_modules/\r\n\r\n# Distribution directory\r\ndist/\r\n".to_string();
 
         // Write the contents to the file
         match fs::write(".gitignore", contents) {
