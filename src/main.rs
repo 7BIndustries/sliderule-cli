@@ -1,5 +1,4 @@
 extern crate argparse;
-extern crate git2;
 
 use std::io;
 use std::env;
@@ -7,7 +6,6 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use argparse::{ArgumentParser, Store, List};
-use git2::{Repository};
 
 fn main() {
     // What main command the user is wanting to use
@@ -51,6 +49,9 @@ fn main() {
     else if command == "update" {
         // Just have npm update the entire project, not install a specific package
         npm_install("");
+    }
+    else if command == "upload" {
+        project_upload();
     }
     else {
         println!("Command not recognized: {}", command);
@@ -98,7 +99,7 @@ fn create_component(component_info: &String, init_remote: bool) {
             println!("Setting up new componenet using git.");
 
             // Set the current directory up as a git repo
-            git_init(&url);
+            git_init(&url.trim());
 
             // Make sure we have an appropriate gitignore file
             generate_gitignore();
@@ -181,27 +182,70 @@ fn create_component(component_info: &String, init_remote: bool) {
 }
 
 /*
- * Same as calling git init
+ * Uses the installed git command to initialize a project repo.
  */
 fn git_init(url: &str) {
-    let path = env::current_dir().unwrap();
+    println!("Working...");
 
-    // We don't want to re-initialize an existing git structure
+    // Initialize the current directory as a git repo
+    match Command::new("git").args(&["init"]).output() {
+        Ok(_) => println!("git repository initialized for project."),
+        Err(e) => {
+            if let std::io::ErrorKind::NotFound = e.kind() {
+                println!("`git` was not found, please install");
+            } else {
+                println!("Could not initialize git repository.");
+            }
+        }
+    }
+
+    // Add the remote URL
+    match Command::new("git").args(&["remote", "add", "origin", url]).output() {
+        Ok(_) => println!("Set git remote for project."),
+        Err(_) => println!("Unable to set remote URL for project.")
+    }
+
+    println!("Done initializing git repository for project.");
+}
+
+/*
+ * Adds, commits and pushes any changes to the remote git repo.
+ */
+fn git_add_and_commit() {
+    let mut message = String::new();
+
+    // Get the commit message from the user to mark these changes with
+    println!("Message to attach to these project changes:");
+
+    io::stdin().read_line(&mut message)
+        .expect("Failed to read change message line from user");
+
+    match Command::new("git").args(&["add", "."]).output() {
+        Ok(_) => println!("Staged changes for git."),
+        Err(_) => println!("Unable to stage changes using git.")
+    }
+
+    match Command::new("git").args(&["commit", "-m", &message]).output() {
+        Ok(_) => println!("Created commit."),
+        Err(_) => println!("Unable to create commit using git.")
+    }
+
+    match Command::new("git").args(&["push", "origin", "master"]).output() {
+        Ok(_) => println!("Pushed changes to remote git repository."),
+        Err(_) => println!("Unable to push changes to remote git repository.")
+    }
+}
+
+/*
+ * Uploads any changes to the project to the remote repository.
+ */
+fn project_upload() {
+    // Make sure this project has already been initialized as a repo
     if !Path::new(".git").exists() {
-        let repo = match Repository::init(&path) {
-            Ok(path) => path,
-            Err(_) => return
-        };
-
-        match repo.remote("origin", url) {
-            Ok(path) => path,
-            Err(_) => return
-        };
-
-        println!("Initialized git repository in {}", path.display());
+        println!("This project has not been initialized with a repository yet. Try running 'sliderule-cli create' and then try again.");
     }
     else {
-        println!("WARNING: Directory {} already initialized as a git repository.", path.display());
+        git_add_and_commit();
     }
 }
 
