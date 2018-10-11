@@ -339,18 +339,12 @@ fn npm_install(url: &str) {
 
     // Set the command name properly based on which OS the user is running
     if info.os_type() == os_info::Type::Windows {
-        cmd_name = "npm.cmd";
+        cmd_name = r"C:\Program Files\nodejs\npm.cmd";
     }
 
     // If no URL was specified, just npm update the whole project
     if !url.is_empty() {
-        if info.os_type() == os_info::Type::Windows {
-            vec.push("--save");
-        }
-        else {
-            vec.push("--save");
-        }
-
+        vec.push("--save");
         vec.push(url);
     }
 
