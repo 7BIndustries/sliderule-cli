@@ -45,7 +45,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 - `sliderule-cli create [name]` - Creates a new local component from scratch and places it within the `components` directory of the current project.
 - `sliderule-cli add [url]` - Downloads a remote component and installs it in the current project. Unless a user is an owner or maintainer of the remote component's repository, remote components are read-only.
 - _Future:_ `sliderule-cli remove [name]` - Removes the named component from a project. The name can refer to either a local or remote component.
-- _Future:_ `sliderule-cli refactor [name]` - Changes a local component as a remote component. This command will ask for a URL for the component to be pushed to. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
+- _Future:_ `sliderule-cli refactor [name]` - Changes a local component to a remote component. This command will ask for a URL for the component to be pushed to. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
 
 ## Compiling It Yourself
 
