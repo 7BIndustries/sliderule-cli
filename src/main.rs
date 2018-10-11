@@ -6,6 +6,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use argparse::{ArgumentParser, Store, List};
+extern crate os_info;
 
 fn main() {
     // What main command the user is wanting to use
@@ -332,17 +333,30 @@ fn generate_gitignore() {
 fn npm_install(url: &str) {
     let mut vec = Vec::new();
     vec.push("install");
-    // let mut args = ["install"];
+    
+    let info = os_info::get();
+    let mut cmd_name = "npm";
+
+    // Set the command name properly based on which OS the user is running
+    if info.os_type() == os_info::Type::Windows {
+        cmd_name = "npm.cmd";
+    }
 
     // If no URL was specified, just npm update the whole project
     if !url.is_empty() {
-        vec.push("--save");
+        if info.os_type() == os_info::Type::Windows {
+            vec.push("--save");
+        }
+        else {
+            vec.push("--save");
+        }
+
         vec.push(url);
     }
 
     println!("Working...");
 
-    match Command::new("npm").args(&vec).output() {
+    match Command::new(&cmd_name).args(&vec).output() {
         Ok(_) => {
             if !url.is_empty() {
                 println!("Component installed from remote repository.");
@@ -353,11 +367,11 @@ fn npm_install(url: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("`npm` was not found, falling back to internal npm implementation.");
+                println!("`npm` was not found.");
 
                 // TODO: Call internal npm implementation here
             } else {
-                println!("Could not install component from remote repository.");
+                println!("Could not install component from remote repository: {}", e);
             }
         }
     }

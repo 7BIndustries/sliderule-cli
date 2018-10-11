@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Jeremy Mack Wright <wrightjmf@gmail.com>"]
 
 [dependencies]
-git2 = "0.7"
 argparse = "0.2.2"
+os_info = "1.0.3"
