@@ -1,19 +1,27 @@
 # sliderule-cli
 
 ## Introduction
-This is a reference implementation for the open [sliderule methodology](https://github.com/Mach30/sliderule) being developed by [Mach 30](http://mach30.org/).
+This is a command line implementation of the open source hardware [sliderule methodology](https://github.com/Mach30/sliderule) being developed by [Mach 30](http://mach30.org/).
 
 ***NOTE*** This is in the very early stages of development, and is not ready for widespread use.
 
 ## Installation
 
-Binaries will be avaiable shortly for Linux, Windows and MacOS.
+git and npm must be installed separately for sliderule-cli to work. Binaries for sliderule-cli itself will be avaiable shortly for Linux, Windows and MacOS.
 
-If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program.
-```
-cargo build
-```
-Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
+### Windows
+- [Install git](https://git-scm.com/download/win)
+- [Install npm](https://www.npmjs.com/package/npm#windows-computers)
+
+### Linux
+
+- [Install git](https://git-scm.com/download/linux)
+- [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
+
+### MacOS
+
+- [Install git](https://git-scm.com/download/mac)
+- [Install npm](https://www.npmjs.com/package/npm#apple-macintosh-computers)
 
 ## Usage
 
@@ -37,3 +45,11 @@ Everything in Sliderule is a component, even the top level "project" component t
 - _Future:_ `sliderule-cli clone [URL]` - Clones (copies) a Sliderule project. `sliderule-cli update` will need to be run after the clone to download all remote components.
 - _Future:_ `sliderule-cli remove_component [name]` - Removes the named component from a project. The name can refer to either a local or remote component.
 - _Future:_ `sliderule-cli refactor_component [name]` - Changes a local component as a remote component. This command will ask for a URL for the component to be pushed to. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
+
+## Compiling It Yourself
+
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program.
+```
+cargo build
+```
+Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
