@@ -30,13 +30,13 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 Everything in Sliderule is a component, even the top level "project" component that holds all other components. In this way, your top level project can be used as component of another project later on. The workflow for creating, initializing and populating a new project is as follows.
 
 1. Create a version controlled repository for the project on a personal server or site like [GitHub](https://github.com).
-2. Create a directory with the same name as the new repository, and change (`cd`) into that directory.
-3. Run `sliderule-cli init`, and supply the URL of the repository created in step 1 when prompted.
+2. Run `sliderule-cli create [url]`, and supply the URL of the repository created in step 1 in place of `url`.
+3. (`cd`) into the newly created component directory, with the same name as the repository at `url`.
 4. Use `sliderule-cli add [url]` to begin pulling remote components into the project. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
 5. Use `sliderule-cli create [name]` to create new local components within your project.
 5. Add and change project source files in each component as needed to complete your design.
-6. Use `sliderule-cli update`to pull the latest changes for any remote componenets, and update any auto-generated files within the project and place them in the `dist` directory.
-7. Use `sliderule-cli upload` to add a message and upload all of the changes made within the project's file structure to the remote repository.
+6. Use `sliderule-cli download`to download the latest changes for your project/component and for any remote componenets.
+7. Use `sliderule-cli upload` and provide a message when prompted upload all of the changes made within the project's file structure to its remote repository.
 
 ### Command Listing
 - `sliderule-cli create [name | url]` - Creates a new component. 
