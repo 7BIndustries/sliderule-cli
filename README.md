@@ -29,14 +29,13 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 
 Everything in Sliderule is a component, even the top level "project" component that holds all other components. In this way, your top level project can be used as component of another project later on. The workflow for creating, initializing and populating a new project is as follows.
 
-1. Create a version controlled repository for the project on a personal server or site like [GitHub](https://github.com).
-2. Run `sliderule-cli create [url]`, and supply the URL of the repository created in step 1 in place of `url`.
-3. (`cd`) into the newly created component directory, with the same name as the repository at `url`.
-4. Use `sliderule-cli add [url]` to begin pulling remote components into the project. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
-5. Use `sliderule-cli create [name]` to create new local components within your project.
-5. Add and change project source files in each component as needed to complete your design.
+1. Run `sliderule-cli create [name]` in a directory that you have access to, and that is not already a component directory.
+2. Change (`cd`) into the newly created component directory, with the name provided as the `name` argument from step 1.
+3. Use `sliderule-cli add [url]` to begin pulling remote components into the project. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
+4. Use `sliderule-cli create [name]` to create new local components within your project.
+5. Add and change project source files in each local component as needed to complete your design.
 6. Use `sliderule-cli download`to download the latest changes for your project/component and for any remote componenets.
-7. Use `sliderule-cli upload` and provide a message when prompted upload all of the changes made within the project's file structure to its remote repository.
+7. Use `sliderule-cli upload` and provide a message when prompted to upload all of the changes made within the project's file structure to its remote repository. If the current project is not set up for a remote repository, the CLI will prompt for a URL. The remote repository must already exist, and is not created by the CLI.
 
 ### Command Listing
 - `sliderule-cli create [name]` - Creates a new component.
