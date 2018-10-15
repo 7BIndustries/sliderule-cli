@@ -24,30 +24,22 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let mut component_info = String::new();
-
     // Handle the command line arguments
     if command == "create" {
-        component_info = String::from("sliderule-cli_new_project");
+        // The user is supposed to pass a name for the component in as an argument
+        let name = &args[0];
 
-        create_component(&component_info, true);
+        create_component(&name);
     }
-    else if command == "add_component" {
-        println!("Enter a name of a new local component, or a URL for a remote component to download: ");
+    else if command == "add" {
+        // The user is expected to have provided a URL of a remote component that can be downloaded
+        let url = &args[0];
 
-        io::stdin().read_line(&mut component_info)
-            .expect("Failed to read name or URL from user.");
-
-        if component_info.contains("/") {
-            // We have a remote URL, install using npm
-            npm_install(&component_info);
-        }
-        else {
-            // The user wants to create a local component
-            create_component(&component_info.trim().to_string(), false);
-        }
+        npm_install(&url);
     }
-    else if command == "update" {
+    else if command == "download" {
+        // TODO: Handle the different command line arguments (all, dependencies, component_url) here
+
         // Just have npm update the entire project, not install a specific package
         npm_install("");
     }
@@ -62,53 +54,33 @@ fn main() {
 /*
  * Create a new Sliderule component or convert an existing project to being a Sliderule project.
  */
-fn create_component(component_info: &String, init_remote: bool) {
-    let mut url = String::new();
-    let mut component_name = component_info.to_string();
+fn create_component(name: &String) {
+    // Check to see if the current directory is a component
+    let is_component = Path::new("components").exists() && Path::new("bom_data.yaml").exists();
 
-    // TODO: Make new directory in components and cd into it unless this is a project level repo
-    if component_info != "sliderule-cli_new_project" {
-        let component_dir_str = format!("components/{}", component_info);
+    // The path can either lead to a top level component (project), or a component nested within a project
+    let mut component_dir = Path::new("components").join(name);
 
-        // Create a directory for our component inside the components directory
-        match fs::create_dir(component_dir_str) {
-            Ok(dir) => dir,
-            Err(error) => {
-                println!("ERROR: Could not create dist directory: {:?}", error);
-            }
-        };
-
-        // Make a new directory in componenets, cd into it, and then run the rest of this code
-        let components_dir = Path::new("components").join(component_info);
-        match env::set_current_dir(&components_dir) {
-            Ok(dir) => dir,
-            Err(_) => {
-                println!("Could not change into components directory. Has this project been initialized as a Sliderule project?");
-            }
-        };
+    // This is a top level component (project)
+    if !is_component {
+        component_dir = Path::new(name).to_path_buf();
     }
 
-    // See if we need to set up a repository for this component
-    if init_remote == true {
-        println!("Enter the URL of the repository that you previously created for this project: ");
-
-        io::stdin().read_line(&mut url)
-            .expect("Failed to read line from user");
-
-        // Figure out what type of repository we're working with
-        if url.contains("git") {
-            println!("Setting up new componenet using git.");
-
-            // Set the current directory up as a git repo
-            git_init(&url.trim());
-
-            // Make sure we have an appropriate gitignore file
-            generate_gitignore();
+    // Create a directory for our component inside the components directory
+    match fs::create_dir(&component_dir) {
+        Ok(dir) => dir,
+        Err(error) => {
+            println!("ERROR: Could not create dist directory: {:?}", error);
         }
-        else {
-            println!("ERROR: URL not recognized as a valid repository.");
+    };
+
+    // Make a new directory in componenets, cd into it, and then run the rest of this code
+    match env::set_current_dir(&component_dir) {
+        Ok(dir) => dir,
+        Err(e) => {
+            println!("Could not change into components directory: {}", e);
         }
-    }
+    };
 
     // Create the components directory, if needed
     if !Path::new("components").exists() {
@@ -162,21 +134,15 @@ fn create_component(component_info: &String, init_remote: bool) {
         println!("source directory already exists, using existing directory.")
     }
 
-    if init_remote == true {
-        let last_path_part = url.split("/").last().unwrap().trim();
-        component_name = str::replace(last_path_part, ".git", "");
-    }
-
     // Generate the template readme file
-    generate_readme(&component_name);
+    generate_readme(&name);
 
     // Generate bom_data.yaml
-    generate_bom(&component_name);
+    generate_bom(&name);
 
-    // If we're not setting this component up to be a remote component, we don't want a package.json
-    if init_remote == true {
-        // Generate package.json
-        generate_package_json(&component_name);
+    // Track whether this is a subcomponent or a project
+    if is_component {
+        generate_dot_file();
     }
 
     println!("Finished setting up component.");
@@ -241,6 +207,24 @@ fn git_add_and_commit() {
  * Uploads any changes to the project to the remote repository.
  */
 fn project_upload() {
+    // TODO If the project hasn't been git inited yet, prompt the user for a URL and take care of it.
+
+    // println!("Enter a name of a new local component, or a URL for a remote component to download: ");
+
+    // io::stdin().read_line(&mut component_info)
+    //     .expect("Failed to read name or URL from user.");
+
+    // if init_remote == true {
+    //     let last_path_part = url.split("/").last().unwrap().trim();
+    //     component_name = str::replace(last_path_part, ".git", "");
+    // }
+
+    // If we're not setting this component up to be a remote component, we don't want a package.json
+    // if init_remote == true {
+    //     // Generate package.json
+    //     generate_package_json(&component_name);
+    // }
+
     // Make sure this project has already been initialized as a repo
     if !Path::new(".git").exists() {
         println!("This project has not been initialized with a repository yet. Try running 'sliderule-cli create' and then try again.");
@@ -324,6 +308,26 @@ fn generate_gitignore() {
     }
     else {
         println!(".gitignore already exists, using existing file and refusing to overwrite.");
+    }
+}
+
+/*
+ * Generates the dot file that tracks whether this is a top level component/project or a subcomponent
+ */
+fn generate_dot_file() {
+    if !Path::new(".subcomponent").exists() {
+        let contents: String = "".to_string();
+
+        // Write the contents to the file
+        match fs::write(".subcomponent", contents) {
+            Ok(res) => res,
+            Err(error) => {
+                println!("Cound not write to .subcomponent: {:?}", error);
+            }
+        };
+    }
+    else {
+        println!(".subcomponent already exists, using existing file and refusing to overwrite.");
     }
 }
 
