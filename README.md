@@ -39,7 +39,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 ### Command Listing
 - `sliderule-cli create [name]` - Creates a new component.
-  - If the current directory is not a component, a `name` directory is created in the current directory, assuming the user has write access. The new direcotry is then initialized as a new top-level Sliderule project component, with files and directories being created as needed to match the Sliderule methodology.
+  - If the current directory is not a component, a `name` directory is created in the current directory, assuming the user has write access. The new directory is then initialized as a new top-level Sliderule project component, with files and directories being created as needed to match the Sliderule methodology.
   - If the current directory is already a component, creates a new local component `name` from scratch and places it within the `components` directory of the current project.
 - `sliderule-cli download [all | dependencies | component_url]` - Downloads updates for the Sliderule project in the current directory.
   - `all` (default) - Downloads all changes to the component and its dependencies, assuming the current directory holds a Sliderule component.
