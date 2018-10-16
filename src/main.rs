@@ -66,6 +66,20 @@ fn main() {
     else if command == "upload" {
         project_upload();
     }
+    else if command == "remove" {
+        let name = &args[0];
+
+        println!("Remove called with {}.", name);
+
+        // Deletes a local component's directory, or npm uninstalls a remote component
+        remove(name);
+    }
+    else if command == "refactor" {
+        let name = &args[0];
+
+        // Convert the local component into a remote component
+        refactor(name);
+    }
     else {
         println!("ERROR: Command not recognized: {}", command);
     }
@@ -84,6 +98,8 @@ fn create_component(name: &String) {
     // This is a top level component (project)
     if !is_component {
         component_dir = Path::new(name).to_path_buf();
+
+        generate_dot_file();
     }
 
     // Create a directory for our component inside the components directory
@@ -160,10 +176,8 @@ fn create_component(name: &String) {
     // Generate bom_data.yaml
     generate_bom(&name);
 
-    // Track whether this is a subcomponent or a project
-    if is_component {
-        generate_dot_file();
-    }
+    // Generate package.json, if needed
+    generate_package_json(&name);
 
     println!("Finished setting up component.");
 }
@@ -187,10 +201,16 @@ fn git_init(url: &str) {
     }
 
     // Add the remote URL
-    match Command::new("git").args(&["remote", "add", "origin", url]).output() {
-        Ok(_) => println!("Set git remote for project."),
-        Err(_) => println!("ERROR: Unable to set remote URL for project.")
-    }
+    let output = Command::new("git").args(&["remote", "add", "origin", url]).output()
+        .expect("ERROR: Unable to set remote URL for project."); 
+    //{
+    //     Ok(_) => println!("Set git remote for project."),
+    //     Err(_) => println!("ERROR: Unable to set remote URL for project.")
+    // }
+
+    println!("status: {}", output.status);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
 
     println!("Done initializing git repository for project.");
 }
@@ -207,20 +227,40 @@ fn git_add_and_commit() {
     io::stdin().read_line(&mut message)
         .expect("ERROR: Failed to read change message line from user");
 
-    match Command::new("git").args(&["add", "."]).output() {
-        Ok(_) => println!("Staged changes for git."),
-        Err(_) => println!("ERROR: Unable to stage changes using git.")
-    }
+    let output = Command::new("git").args(&["add", "."]).output()
+        .expect("ERROR: Unable to stage changes using git.");
 
-    match Command::new("git").args(&["commit", "-m", &message]).output() {
-        Ok(_) => println!("Created commit."),
-        Err(_) => println!("ERROR: Unable to create commit using git.")
-    }
+    println!("status: {}", output.status);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+    // {
+    //     Ok(_) => println!("Staged changes for git."),
+    //     Err(_) => println!("ERROR: Unable to stage changes using git.")
+    // }
 
-    match Command::new("git").args(&["push", "origin", "master"]).output() {
-        Ok(_) => println!("Pushed changes to remote git repository."),
-        Err(_) => println!("ERROR: Unable to push changes to remote git repository.")
-    }
+    let output = Command::new("git").args(&["commit", "-m", &message]).output()
+        .expect("ERROR: Unable to push changes to remote git repository.");
+
+    println!("status: {}", output.status);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    // {
+    //     Ok(_) => println!("Created commit."),
+    //     Err(_) => println!("ERROR: Unable to create commit using git.")
+    // }
+
+    let output = Command::new("git").args(&["push", "origin", "master"]).output()
+        .expect("ERROR: Unable to push changes to remote git repository.");
+
+    println!("status: {}", output.status);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    // {
+    //     Ok(_) => println!("Pushed changes to remote git repository."),
+    //     Err(_) => println!("ERROR: Unable to push changes to remote git repository.")
+    // }
 }
 
 /*
@@ -253,22 +293,91 @@ fn project_upload() {
         io::stdin().read_line(&mut url)
             .expect("ERROR: Failed to read name or URL from user.");
 
-        // Extract the repo name from the last part of the repo URL
-        let last_path_part = url.split("/").last().unwrap().trim();
-        let component_name = str::replace(last_path_part, ".git", "");
-
         // Initialize the git repo and set the remote URL to push to
         git_init(url.trim());
 
         // Genreate gitignore file so that we don't commit and push things we shouldn't be
         generate_gitignore();
+    }
+    
+    // Add all changes, commit and push
+    git_add_and_commit();
+}
 
-        // Generate package.json
-        generate_package_json(&component_name);
+/*
+ * Converts a local component into a remote component, asking for a remote repo to push it to.
+ */
+fn refactor(name: &str) {
+    let mut url = String::new();
+    
+    println!("Please enter the URL of an existing repository to upload the component to:");
+
+    io::stdin().read_line(&mut url)
+            .expect("ERROR: Failed to read name or URL from user.");
+
+    let orig_dir = env::current_dir().unwrap();
+    let component_dir = Path::new("components").join(name);
+
+    if component_dir.exists() {
+        // We need to be in the component's directory before running the next commands
+        match env::set_current_dir(&component_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                println!("ERROR: Could not change into components directory: {}", e);
+            }
+        };
+
+        // Set the directory up as a git repo and then push the changes to the remote
+        git_init(&url.trim());
+        git_add_and_commit();
+
+        // Change back up to the original, top level directory
+        match env::set_current_dir(&orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                println!("ERROR: Could not change into original parent directory: {}", e);
+            }
+        };
+
+        // Remove the local component and then install it from the remote using npm
+        remove(&name);
+        npm_install(&url.trim());
     }
     else {
-        // Add all changes, commit and push
-        git_add_and_commit();
+        println!("ERROR: The component does not exist in the components directory.");
+    }
+}
+
+/*
+ * Removes a component from the project structure.
+ */
+fn remove(name: &str) {
+    let mut answer = String::new();
+
+    println!("Type Y/y and hit enter to continue removing this component: {}", name);
+
+    io::stdin().read_line(&mut answer)
+        .expect("ERROR: Failed to read answer from user.");
+
+    // Make sure that the answer was really yes on removal of the component
+    if &answer.trim().to_uppercase() != "Y" {
+        println!("Aborting component removal.");
+
+        return;
+    }
+
+    let component_dir = Path::new("components").join(name);
+
+    // If the component exists as a subdirectory of components delete the directory directly otherwise use npm to remove it.
+    if component_dir.exists() {
+        println!("Deleting component directory.");
+
+        fs::remove_dir_all(component_dir)
+            .expect("ERROR: not able to delete component directory.");
+    }
+    else {
+        // Use npm to remove the remote component
+        npm_uninstall(name);
     }
 }
 
@@ -353,7 +462,7 @@ fn generate_gitignore() {
  * Generates the dot file that tracks whether this is a top level component/project or a subcomponent
  */
 fn generate_dot_file() {
-    if !Path::new(".subcomponent").exists() {
+    if !Path::new(".top").exists() {
         let contents: String = "".to_string();
 
         // Write the contents to the file
@@ -400,6 +509,43 @@ fn npm_install(url: &str) {
             else {
                 println!("Sliderule project updated.");
             }
+        },
+        Err(e) => {
+            if let std::io::ErrorKind::NotFound = e.kind() {
+                println!("ERROR: `npm` was not found, please install it.");
+            } else {
+                println!("ERROR: Could not install component from remote repository: {}", e);
+            }
+        }
+    }
+}
+
+/*
+ * Uses the npm command to remove a remote component.
+ */
+fn npm_uninstall(name: &str) {
+    let mut vec = Vec::new();
+    vec.push("uninstall");
+    
+    let info = os_info::get();
+    let mut cmd_name = "npm";
+
+    // Set the command name properly based on which OS the user is running
+    if info.os_type() == os_info::Type::Windows {
+        cmd_name = r"C:\Program Files\nodejs\npm.cmd";
+    }
+
+    // If no URL was specified, just npm update the whole project
+    if !name.is_empty() {
+        vec.push("--save");
+        vec.push(name);
+    }
+
+    println!("Working...");
+
+    match Command::new(&cmd_name).args(&vec).output() {
+        Ok(_) => {
+            println!("Component uninstalled using npm.");
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
