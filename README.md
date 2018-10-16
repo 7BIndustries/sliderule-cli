@@ -31,7 +31,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 1. Run `sliderule-cli create [name]` in a directory that you have access to, and that is not already a component directory.
 2. Change (`cd`) into the newly created component directory, with the name provided as the `name` argument from step 1.
-3. Use `sliderule-cli add [url]` to begin pulling remote components into the project. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
+3. Use `sliderule-cli add [url]` to begin pulling remote components into the project.
 4. Use `sliderule-cli create [name]` to create new local components within your project.
 5. Add and change project source files in each local component as needed to complete your design.
 6. Use `sliderule-cli download`to download the latest changes for your project/component and for any remote componenets.
@@ -46,9 +46,9 @@ Everything in Sliderule is a component, even the top level "project" component t
   - `dependencies` - Downloads updates for only dependency components, assuming that the current directory is a Sliderule component.
   - `component_url` - Makes a copy of an existing remote component at the given URL. This creates a new directory for the downloaded component. Unless a user is an owner or maintainer of the remote component's repository, the downloaded component is read-only.
 - `sliderule-cli upload` - Asks for a message to attach to any changes, and uploads all project/component changes. If the current component directory has not been initilized for a remote repository, the user is prompted to enter the repository's URL.
-- `sliderule-cli add [url]` - Downloads a remote component and installs it in the current project. Unless a user is an owner or maintainer of the remote component's repository, remote components are read-only.
+- `sliderule-cli add [url]` - Downloads a remote component and installs it in the current project. Unless a user is an owner or maintainer of the remote component's repository, remote components are read-only. If using a git host such as GitHub, the https URL must be used, instead of the SSH link. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
 - `sliderule-cli remove [name]` - Removes the named component from a project. The name can refer to either a local or remote component.
-- `sliderule-cli refactor [name]` - Changes a local component to a remote component. This command will ask for a URL for the component to be pushed to. *NOTE:* The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time.
+- `sliderule-cli refactor [name]` - Changes a local component to a remote component. This command will ask for a URL for the component to be pushed to. The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time. Use the SSH link to the repository if hosted on GitHub, GitLab, Git* instead of the https link, and make sure to have your ssh keys set up correctly for your operating system.
 
 ## Compiling It Yourself
 
