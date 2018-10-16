@@ -38,16 +38,36 @@ fn main() {
         npm_install(&url);
     }
     else if command == "download" {
-        // TODO: Handle the different command line arguments (all, dependencies, component_url) here
+        let subcommand = &args[0];
 
-        // Just have npm update the entire project, not install a specific package
-        npm_install("");
+        // Check to see if we have a URL
+        if subcommand.contains("/") {
+            // git clone here and warn the user that what they're downloading is possibly read only
+            git_clone(subcommand);
+
+            println!("Unless you have write access to the downloaded repository, this copy will be read-only.")
+        }
+        else if subcommand == "all" {
+            if Path::new(".git").exists() {
+                git_pull();
+            }
+
+            // Just have npm update the entire project, not install a specific package
+            npm_install("");
+        }
+        else if subcommand == "dependencies" {
+            // Just have npm update the entire project, not install a specific package
+            npm_install("");
+        }
+        else {
+            println!("ERROR: Subcommand of download not recognized.");
+        }
     }
     else if command == "upload" {
         project_upload();
     }
     else {
-        println!("Command not recognized: {}", command);
+        println!("ERROR: Command not recognized: {}", command);
     }
 }
 
@@ -78,7 +98,7 @@ fn create_component(name: &String) {
     match env::set_current_dir(&component_dir) {
         Ok(dir) => dir,
         Err(e) => {
-            println!("Could not change into components directory: {}", e);
+            println!("ERROR: Could not change into components directory: {}", e);
         }
     };
 
@@ -159,9 +179,9 @@ fn git_init(url: &str) {
         Ok(_) => println!("git repository initialized for project."),
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("`git` was not found, please install");
+                println!("ERROR: `git` was not found, please install");
             } else {
-                println!("Could not initialize git repository.");
+                println!("ERROR: Could not initialize git repository: {}", e);
             }
         }
     }
@@ -169,7 +189,7 @@ fn git_init(url: &str) {
     // Add the remote URL
     match Command::new("git").args(&["remote", "add", "origin", url]).output() {
         Ok(_) => println!("Set git remote for project."),
-        Err(_) => println!("Unable to set remote URL for project.")
+        Err(_) => println!("ERROR: Unable to set remote URL for project.")
     }
 
     println!("Done initializing git repository for project.");
@@ -185,21 +205,38 @@ fn git_add_and_commit() {
     println!("Message to attach to these project changes:");
 
     io::stdin().read_line(&mut message)
-        .expect("Failed to read change message line from user");
+        .expect("ERROR: Failed to read change message line from user");
 
     match Command::new("git").args(&["add", "."]).output() {
         Ok(_) => println!("Staged changes for git."),
-        Err(_) => println!("Unable to stage changes using git.")
+        Err(_) => println!("ERROR: Unable to stage changes using git.")
     }
 
     match Command::new("git").args(&["commit", "-m", &message]).output() {
         Ok(_) => println!("Created commit."),
-        Err(_) => println!("Unable to create commit using git.")
+        Err(_) => println!("ERROR: Unable to create commit using git.")
     }
 
     match Command::new("git").args(&["push", "origin", "master"]).output() {
         Ok(_) => println!("Pushed changes to remote git repository."),
-        Err(_) => println!("Unable to push changes to remote git repository.")
+        Err(_) => println!("ERROR: Unable to push changes to remote git repository.")
+    }
+}
+
+/*
+ * Pulls latest updates from a component's git repo.
+ */
+fn git_pull() {
+    match Command::new("git").args(&["pull", "origin", "master"]).output() {
+        Ok(_) => println!("Pulled changes from component repository."),
+        Err(_) => println!("ERROR: Unable to pull changes from component repository.")
+    }
+}
+
+fn git_clone(url: &str) {
+    match Command::new("git").args(&["clone", url]).output() {
+        Ok(_) => println!("Sucessfully cloned component repository."),
+        Err(_) => println!("ERROR: Unable to clone component repository.")
     }
 }
 
@@ -207,29 +244,30 @@ fn git_add_and_commit() {
  * Uploads any changes to the project to the remote repository.
  */
 fn project_upload() {
-    // TODO If the project hasn't been git inited yet, prompt the user for a URL and take care of it.
-
-    // println!("Enter a name of a new local component, or a URL for a remote component to download: ");
-
-    // io::stdin().read_line(&mut component_info)
-    //     .expect("Failed to read name or URL from user.");
-
-    // if init_remote == true {
-    //     let last_path_part = url.split("/").last().unwrap().trim();
-    //     component_name = str::replace(last_path_part, ".git", "");
-    // }
-
-    // If we're not setting this component up to be a remote component, we don't want a package.json
-    // if init_remote == true {
-    //     // Generate package.json
-    //     generate_package_json(&component_name);
-    // }
+    let mut url = String::new();
 
     // Make sure this project has already been initialized as a repo
     if !Path::new(".git").exists() {
-        println!("This project has not been initialized with a repository yet. Try running 'sliderule-cli create' and then try again.");
+        println!("This project has not been initialized with a repository yet. Enter a URL of an existing repository to upload this component to:");
+
+        io::stdin().read_line(&mut url)
+            .expect("ERROR: Failed to read name or URL from user.");
+
+        // Extract the repo name from the last part of the repo URL
+        let last_path_part = url.split("/").last().unwrap().trim();
+        let component_name = str::replace(last_path_part, ".git", "");
+
+        // Initialize the git repo and set the remote URL to push to
+        git_init(url.trim());
+
+        // Genreate gitignore file so that we don't commit and push things we shouldn't be
+        generate_gitignore();
+
+        // Generate package.json
+        generate_package_json(&component_name);
     }
     else {
+        // Add all changes, commit and push
         git_add_and_commit();
     }
 }
@@ -245,7 +283,7 @@ fn generate_readme(name: &str) {
         match fs::write("README.md", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("Could not write to README.md file: {:?}", error);
+                println!("ERROR: Could not write to README.md file: {:?}", error);
             } 
         };
     }
@@ -262,7 +300,7 @@ fn generate_bom(name: &str) {
         match fs::write("bom_data.yaml", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("Cound not write to bom_data.yaml: {:?}", error);
+                println!("ERROR: Cound not write to bom_data.yaml: {:?}", error);
             } 
         };
     }
@@ -282,7 +320,7 @@ fn generate_package_json(name: &str) {
         match fs::write("package.json", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("Could not write to package.json: {:?}", error);
+                println!("ERROR: Could not write to package.json: {:?}", error);
             }
         };
     }
@@ -302,7 +340,7 @@ fn generate_gitignore() {
         match fs::write(".gitignore", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("Cound not write to .gitignore: {:?}", error);
+                println!("ERROR: Cound not write to .gitignore: {:?}", error);
             }
         };
     }
@@ -322,7 +360,7 @@ fn generate_dot_file() {
         match fs::write(".subcomponent", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("Cound not write to .subcomponent: {:?}", error);
+                println!("ERROR: Could not write to .subcomponent: {:?}", error);
             }
         };
     }
@@ -365,11 +403,9 @@ fn npm_install(url: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("`npm` was not found.");
-
-                // TODO: Call internal npm implementation here
+                println!("ERROR: `npm` was not found, please install it.");
             } else {
-                println!("Could not install component from remote repository: {}", e);
+                println!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
     }
