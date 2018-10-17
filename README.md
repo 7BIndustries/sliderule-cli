@@ -13,6 +13,8 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
 
+Unfortunately, at this time the passphrase has to be removed from the private key for the CLI to work. Follow the instructions [here](https://www.simplified.guide/ssh/set-remove-passphrase) to do that.
+
 ### Linux
 
 - [Install git](https://git-scm.com/download/linux)
