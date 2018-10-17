@@ -100,8 +100,6 @@ fn create_component(name: &String) {
     // This is a top level component (project)
     if !is_component {
         component_dir = Path::new(name).to_path_buf();
-
-        generate_dot_file();
     }
 
     // Create a directory for our component inside the components directory
@@ -180,6 +178,11 @@ fn create_component(name: &String) {
 
     // Generate package.json, if needed
     generate_package_json(&name);
+
+    // Generate the .top file that marks this as a top-level component
+    if !is_component {
+        generate_dot_file();
+    }
 
     println!("Finished setting up component.");
 }
@@ -481,15 +484,15 @@ fn generate_dot_file() {
         let contents: String = "".to_string();
 
         // Write the contents to the file
-        match fs::write(".subcomponent", contents) {
+        match fs::write(".top", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Could not write to .subcomponent: {:?}", error);
+                println!("ERROR: Could not write to .top: {:?}", error);
             }
         };
     }
     else {
-        println!(".subcomponent already exists, using existing file and refusing to overwrite.");
+        println!(".top already exists, using existing file and refusing to overwrite.");
     }
 }
 
