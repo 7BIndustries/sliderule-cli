@@ -1,4 +1,6 @@
 extern crate argparse;
+extern crate os_info;
+extern crate walkdir;
 
 use std::io;
 use std::env;
@@ -6,7 +8,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use argparse::{ArgumentParser, Store, List};
-extern crate os_info;
+use walkdir::WalkDir;
 
 fn main() {
     // What main command the user is wanting to use
@@ -371,6 +373,19 @@ fn remove(name: &str) {
     // If the component exists as a subdirectory of components delete the directory directly otherwise use npm to remove it.
     if component_dir.exists() {
         println!("Deleting component directory.");
+
+        // Step through every file and directory in the path to be deleted and make sure that none are read-only
+        for entry in WalkDir::new(&component_dir) {
+            let entry = entry.unwrap();
+
+            // Remove read-only permissions on every entry
+            let md = &entry.path().metadata().
+                expect("ERROR: Could not get metadata.");
+            let mut perms = md.permissions();
+            perms.set_readonly(false);
+            fs::set_permissions(&entry.path(), perms)
+                .expect("Error: Failed to set permissions on .git directory");
+        }
 
         fs::remove_dir_all(component_dir)
             .expect("ERROR: not able to delete component directory.");

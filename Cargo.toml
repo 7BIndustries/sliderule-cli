@@ -6,3 +6,4 @@ authors = ["Jeremy Mack Wright <wrightjmf@gmail.com>"]
 [dependencies]
 argparse = "0.2.2"
 os_info = "1.0.3"
+walkdir = "2.2.5"
