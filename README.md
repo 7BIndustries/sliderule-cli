@@ -19,6 +19,14 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
+- Download the [latest Linux package](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x64_20181017_1.tar.xz) of sliderule-cli.
+- Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
+- Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
+
+Optionally, it is possible to create a symbolic link to make it more convenient to run the CLI:
+```bash
+$ ln -s ~/bin/sliderule-cli/sliderule-cli ~/bin/sr
+```
 
 ### MacOS
 
