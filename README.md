@@ -12,6 +12,14 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 ### Windows
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
+- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181017_1.zip) of sliderule-cli.
+- Extract the archive to a convenient location (i.e. `C:\Users\[you]\`).
+- Run the command with the full path (i.e. `C:\Users\[you]\sliderule-cli\sliderule-cli.exe`).
+
+Optionally, it is possible to set an alias within Windows Powershell for the CLI to make it more convenient to run:
+```bash
+PS C:\> Set-Alias sr C:\Users\[you]\sliderule-cli\sliderule-cli.exe
+```
 
 Unfortunately, at this time the passphrase has to be removed from the private key for the CLI to work. Follow the instructions [here](https://www.simplified.guide/ssh/set-remove-passphrase) to do that.
 
@@ -19,11 +27,27 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
+- Download the [latest Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x64_20181017_1.tar.xz) of sliderule-cli.
+- Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
+- Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
+
+Optionally, it is possible to create a symbolic link to make it more convenient to run the CLI:
+```bash
+$ ln -s ~/bin/sliderule-cli/sliderule-cli ~/bin/sr
+```
 
 ### MacOS
 
 - [Install git](https://git-scm.com/download/mac)
 - [Install npm](https://www.npmjs.com/package/npm#apple-macintosh-computers)
+- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181017_1.zip) of sliderule-cli.
+- Extract the archive to a location in the `PATH` environment variable (i.e. `~/Applications`).
+- Run the command with the full path (i.e. `~/Applications/sliderule-cli/sliderule-cli`).
+
+Optionally, it is possible to create a symbolic link to make it more convenient to run the CLI (assuming `~/bin` is in your PATH):
+```bash
+$ ln -s ~/Applications/sliderule-cli/sliderule-cli ~/bin/sr
+```
 
 ## Usage
 
