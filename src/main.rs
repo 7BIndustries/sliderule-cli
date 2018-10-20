@@ -62,7 +62,7 @@ fn main() {
             npm_install("");
         }
         else {
-            println!("ERROR: Subcommand of download not recognized.");
+            eprintln!("ERROR: Subcommand of download not recognized.");
         }
     }
     else if command == "upload" {
@@ -83,7 +83,13 @@ fn main() {
         refactor(name);
     }
     else {
-        println!("ERROR: Command not recognized: {}", command);
+        // The user has to supply a command, and it needs to be recognized
+        if args.is_empty() {
+            eprintln!("ERROR: Please supply an command to sliderule-cli.");
+        }
+        else {
+            eprintln!("ERROR: Command not recognized: {}", command);
+        }
     }
 }
 
@@ -106,7 +112,7 @@ fn create_component(name: &String) {
     match fs::create_dir(&component_dir) {
         Ok(dir) => dir,
         Err(error) => {
-            println!("ERROR: Could not create dist directory: {:?}", error);
+            eprintln!("ERROR: Could not create dist directory: {:?}", error);
         }
     };
 
@@ -114,7 +120,7 @@ fn create_component(name: &String) {
     match env::set_current_dir(&component_dir) {
         Ok(dir) => dir,
         Err(e) => {
-            println!("ERROR: Could not change into components directory: {}", e);
+            eprintln!("ERROR: Could not change into components directory: {}", e);
         }
     };
 
@@ -123,7 +129,7 @@ fn create_component(name: &String) {
         match fs::create_dir("components") {
             Ok(dir) => dir,
             Err(error) => {
-                println!("ERROR: Could not create components directory: {:?}", error);
+                eprintln!("ERROR: Could not create components directory: {:?}", error);
             }
         };
     }
@@ -136,7 +142,7 @@ fn create_component(name: &String) {
         match fs::create_dir("dist") {
             Ok(dir) => dir,
             Err(error) => {
-                println!("ERROR: Could not create dist directory: {:?}", error);
+                eprintln!("ERROR: Could not create dist directory: {:?}", error);
             }
         };
     }
@@ -149,7 +155,7 @@ fn create_component(name: &String) {
         match fs::create_dir("docs") {
             Ok(dir) => dir,
             Err(error) => {
-                println!("ERROR: Could not create docs directory: {:?}", error);
+                eprintln!("ERROR: Could not create docs directory: {:?}", error);
             }
         };
     }
@@ -162,7 +168,7 @@ fn create_component(name: &String) {
         match fs::create_dir("source") {
             Ok(dir) => dir,
             Err(error) => {
-                println!("ERROR: Could not create source directory: {:?}", error);
+                eprintln!("ERROR: Could not create source directory: {:?}", error);
             }
         };
     }
@@ -198,9 +204,9 @@ fn git_init(url: &str) {
         Ok(_) => println!("git repository initialized for project."),
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("ERROR: `git` was not found, please install");
+                eprintln!("ERROR: `git` was not found, please install");
             } else {
-                println!("ERROR: Could not initialize git repository: {}", e);
+                eprintln!("ERROR: Could not initialize git repository: {}", e);
             }
         }
     }
@@ -274,14 +280,14 @@ fn git_add_and_commit() {
 fn git_pull() {
     match Command::new("git").args(&["pull", "origin", "master"]).output() {
         Ok(_) => println!("Pulled changes from component repository."),
-        Err(_) => println!("ERROR: Unable to pull changes from component repository.")
+        Err(_) => eprintln!("ERROR: Unable to pull changes from component repository.")
     }
 }
 
 fn git_clone(url: &str) {
     match Command::new("git").args(&["clone", url]).output() {
         Ok(_) => println!("Sucessfully cloned component repository."),
-        Err(_) => println!("ERROR: Unable to clone component repository.")
+        Err(_) => eprintln!("ERROR: Unable to clone component repository.")
     }
 }
 
@@ -328,7 +334,7 @@ fn refactor(name: &str) {
         match env::set_current_dir(&component_dir) {
             Ok(dir) => dir,
             Err(e) => {
-                println!("ERROR: Could not change into components directory: {}", e);
+                eprintln!("ERROR: Could not change into components directory: {}", e);
             }
         };
 
@@ -340,7 +346,7 @@ fn refactor(name: &str) {
         match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
-                println!("ERROR: Could not change into original parent directory: {}", e);
+                eprintln!("ERROR: Could not change into original parent directory: {}", e);
             }
         };
 
@@ -349,7 +355,7 @@ fn refactor(name: &str) {
         npm_install(&url.trim());
     }
     else {
-        println!("ERROR: The component does not exist in the components directory.");
+        eprintln!("ERROR: The component does not exist in the components directory.");
     }
 }
 
@@ -410,7 +416,7 @@ fn generate_readme(name: &str) {
         match fs::write("README.md", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Could not write to README.md file: {:?}", error);
+                eprintln!("ERROR: Could not write to README.md file: {:?}", error);
             } 
         };
     }
@@ -427,7 +433,7 @@ fn generate_bom(name: &str) {
         match fs::write("bom_data.yaml", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Cound not write to bom_data.yaml: {:?}", error);
+                eprintln!("ERROR: Cound not write to bom_data.yaml: {:?}", error);
             } 
         };
     }
@@ -447,7 +453,7 @@ fn generate_package_json(name: &str) {
         match fs::write("package.json", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Could not write to package.json: {:?}", error);
+                eprintln!("ERROR: Could not write to package.json: {:?}", error);
             }
         };
     }
@@ -467,7 +473,7 @@ fn generate_gitignore() {
         match fs::write(".gitignore", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Cound not write to .gitignore: {:?}", error);
+                eprintln!("ERROR: Cound not write to .gitignore: {:?}", error);
             }
         };
     }
@@ -487,7 +493,7 @@ fn generate_dot_file() {
         match fs::write(".top", contents) {
             Ok(res) => res,
             Err(error) => {
-                println!("ERROR: Could not write to .top: {:?}", error);
+                eprintln!("ERROR: Could not write to .top: {:?}", error);
             }
         };
     }
@@ -530,9 +536,9 @@ fn npm_install(url: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("ERROR: `npm` was not found, please install it.");
+                eprintln!("ERROR: `npm` was not found, please install it.");
             } else {
-                println!("ERROR: Could not install component from remote repository: {}", e);
+                eprintln!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
     }
@@ -567,9 +573,9 @@ fn npm_uninstall(name: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("ERROR: `npm` was not found, please install it.");
+                eprintln!("ERROR: `npm` was not found, please install it.");
             } else {
-                println!("ERROR: Could not install component from remote repository: {}", e);
+                eprintln!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
     }
