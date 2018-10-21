@@ -134,7 +134,7 @@ fn create_component(name: &String) {
         };
     }
     else {
-        println!("components directory already exists, using existing directory.")
+        println!("components directory already exists, using existing directory.");
     }
 
     // Create the dist directory, if needed
@@ -147,7 +147,7 @@ fn create_component(name: &String) {
         };
     }
     else {
-        println!("dist directory already exists, using existing directory.")
+        println!("dist directory already exists, using existing directory.");
     }
 
     // Create the docs directory, if needed
@@ -160,7 +160,7 @@ fn create_component(name: &String) {
         };
     }
     else {
-        println!("docs directory already exists, using existing directory.")
+        println!("docs directory already exists, using existing directory.");
     }
 
     //Create the source directory, if needed
@@ -173,7 +173,7 @@ fn create_component(name: &String) {
         };
     }
     else {
-        println!("source directory already exists, using existing directory.")
+        println!("source directory already exists, using existing directory.");
     }
 
     // Generate the template readme file
