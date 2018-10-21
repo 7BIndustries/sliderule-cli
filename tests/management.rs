@@ -33,6 +33,10 @@ mod management {
     }
 
     #[test]
+    /*
+     * Makes sure that the correct files and directories are created for a new top level component, and that
+     * the files and directories have the appropriate content in them.
+     */
     fn test_create_top_level_component() {
         let _my_setup = Noisy;
         let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
