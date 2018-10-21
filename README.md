@@ -7,7 +7,7 @@ This is a command line implementation of the open hardware (OSHW) [sliderule met
 
 ## Installation
 
-git and npm must be installed separately for sliderule-cli to work. Binaries for sliderule-cli itself will be avaiable shortly for Linux, Windows and MacOS.
+git and npm must be installed separately for sliderule-cli to work. Binaries for sliderule-cli are avaiable for Linux, Windows and MacOS.
 
 ### Windows
 - [Install git](https://git-scm.com/download/win)
