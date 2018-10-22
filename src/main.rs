@@ -444,7 +444,8 @@ fn generate_bom(name: &str) {
 
 fn generate_package_json(name: &str) {
     if !Path::new("package.json").exists() {
-        let mut contents: String = "{\r\n  \"name\": \"".to_owned();
+        let mut contents = String::new();
+        contents.push_str("{\r\n  \"name\": \"");
         contents.push_str(&name);
         let append: &str = "\",\r\n  \"version\": \"1.0.0\",\r\n  \"description\": \"Sliderule DOF component.\",\r\n  \"dependencies\": {\r\n  }\r\n}\r\n";
         contents.push_str(append);
