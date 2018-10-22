@@ -83,3 +83,11 @@ If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux,
 cargo build
 ```
 Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
+
+## Running Tests
+
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests.
+```
+cargo test
+```
+At this time the tests are only designed to run on Linux and MacOS.
