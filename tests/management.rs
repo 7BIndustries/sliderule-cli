@@ -15,11 +15,20 @@ mod management {
     use std::path::Path;
 
     struct Noisy;
+    struct Blink;
 
     impl Drop for Noisy {
         fn drop(&mut self) {
             // Clean up after ourselves
             fs::remove_dir_all(Path::new("/tmp").join("test_top"))
+                .expect("ERROR: not able to delete top level component directory.");
+        }
+    }
+
+    impl Drop for Blink {
+        fn drop(&mut self) {
+            // Clean up after ourselves
+            fs::remove_dir_all(Path::new("/tmp").join("blink"))
                 .expect("ERROR: not able to delete top levelcomponent directory.");
         }
     }
@@ -90,12 +99,80 @@ mod management {
         let readme_file = Path::new("/tmp").join("test_top").join("README.md");
 
         // Check the content of the files and directories as appropriate here
-        file_contains_content(&bom_file, 0, "# Bill of Materials for test_top");
-        file_contains_content(&bom_file, 12, "  -component_1");
-        file_contains_content(&package_file, 1, "  \"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "  \"dependencies\": {");
+        file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
+        file_contains_content(&bom_file, 12, "-component_1");
+        file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
+        file_contains_content(&package_file, 4, "\"dependencies\": {");
         file_contains_content(&readme_file, 0, "# test_top");
         file_contains_content(&readme_file, 1, "New Sliderule DOF component.");
+    }
+
+    #[test]
+    /*
+     * Tests the ability to download (clone) a component from a repo.
+     */
+    fn test_download_component() {
+        let _my_setup = Blink;
+        let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
+
+        // The test framework doesn't support Windows at this time
+        let info = os_info::get();
+        if info.os_type() == os_info::Type::Windows {
+            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
+            return;
+        }
+
+        // Check to see if the last test left things dirty
+        if Path::new("/tmp").join("blink").exists() {
+            eprintln!("ERROR: Please delete /tmp/blink before running these tests.");
+
+            return;
+        }
+
+        // match fs::create_dir(Path::new("/tmp").join("blink")) {
+        //     Ok(dir) => dir,
+        //     Err(error) => {
+        //         eprintln!("ERROR: Could not create dist directory: {:?}", error);
+        //     }
+        // };
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Verify that the directory was created
+        let output = Command::new(orig_path)
+            .args(&["download", "https://github.com/m30-jrs/blink.git"])
+            .output()
+            .expect("failed to execute process");
+
+        assert_eq!(String::from_utf8_lossy(&output.stdout).split("\n").collect::<Vec<&str>>()[0] , "Sucessfully cloned component repository.");
+
+        // Verify that the proper directories and files within the top level compoent were created
+        assert_eq!(Path::new("/tmp").join("blink").join("bom_data.yaml").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("components").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("dist").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("docs").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("package.json").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("README.md").exists(), true);
+        assert_eq!(Path::new("/tmp").join("blink").join("source").exists(), true);
+
+        let bom_file = Path::new("/tmp").join("blink").join("bom_data.yaml");
+        let package_file = Path::new("/tmp").join("blink").join("package.json");
+        let readme_file = Path::new("/tmp").join("blink").join("README.md");
+
+        // Check the content of the files and directories as appropriate here
+        file_contains_content(&bom_file, 0, "# Bill of Materials Data for blink");
+        file_contains_content(&bom_file, 12, "options:");
+        file_contains_content(&package_file, 1, "\"name\": \"blink\",");
+        file_contains_content(&package_file, 4, "\"dependencies\": {");
+        file_contains_content(&readme_file, 0, "# blink_firmware");
+        file_contains_content(&readme_file, 1, "The Arduino Blink demo as a DOF component");
     }
 
     /*
@@ -107,8 +184,8 @@ mod management {
         let mut contents = String::new();
         file.read_to_string(&mut contents)
             .expect("Unable to read the file");
-        let contents: Vec<&str> = contents.split("\r\n").collect();
+        let contents: Vec<&str> = contents.split("\n").collect();
 
-        assert_eq!(contents[line], text);
+        assert_eq!(contents[line].trim(), text);
     }
 }

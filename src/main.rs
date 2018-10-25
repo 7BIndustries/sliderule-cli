@@ -285,7 +285,7 @@ fn git_pull() {
 }
 
 fn git_clone(url: &str) {
-    match Command::new("git").args(&["clone", url]).output() {
+    match Command::new("git").args(&["clone", "--recursive", url]).output() {
         Ok(_) => println!("Sucessfully cloned component repository."),
         Err(_) => eprintln!("ERROR: Unable to clone component repository.")
     }
@@ -427,7 +427,7 @@ fn generate_readme(name: &str) {
 
 fn generate_bom(name: &str) {
     if !Path::new("bom_data.yaml").exists() {
-        let contents = format!("# Bill of Materials for {}\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n", name);
+        let contents = format!("# Bill of Materials Data for {}\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n", name);
 
         // Write the temmplate text into the readme file
         match fs::write("bom_data.yaml", contents) {
