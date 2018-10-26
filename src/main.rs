@@ -363,19 +363,20 @@ fn refactor(name: &str) {
  * Removes a component from the project structure.
  */
 fn remove(name: &str) {
-    let mut answer = String::new();
+    // let mut answer = String::new();
 
-    println!("Type Y/y and hit enter to continue removing this component: {}", name);
+    // TODO: The user has to spell the component name out, so maybe that's enough of a safety check?
+    // println!("Type Y/y and hit enter to continue removing this component: {}", name);
 
-    io::stdin().read_line(&mut answer)
-        .expect("ERROR: Failed to read answer from user.");
+    // io::stdin().read_line(&mut answer)
+    //     .expect("ERROR: Failed to read answer from user.");
 
     // Make sure that the answer was really yes on removal of the component
-    if &answer.trim().to_uppercase() != "Y" {
-        println!("Aborting component removal.");
+    // if &answer.trim().to_uppercase() != "Y" {
+    //     println!("Aborting component removal.");
 
-        return;
-    }
+    //     return;
+    // }
 
     let component_dir = Path::new("components").join(name);
 
@@ -403,6 +404,8 @@ fn remove(name: &str) {
         // Use npm to remove the remote component
         npm_uninstall(name);
     }
+
+    println!("{} component removed.", name);
 }
 
 /*
