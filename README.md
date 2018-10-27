@@ -78,16 +78,19 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 ## Compiling It Yourself
 
-If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program.
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program. Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
+### Linux
 ```
-cargo build
+./make.sh build
 ```
 Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
 
 ## Running Tests
 
-If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests.
+At this time, tests will only run in Linux and MacOS.
+
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
-cargo test
+./make.sh test
 ```
 At this time the tests are only designed to run on Linux and MacOS.
