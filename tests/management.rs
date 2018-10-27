@@ -130,7 +130,7 @@ mod management {
         file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
         file_contains_content(&package_file, 4, "\"dependencies\": {");
         file_contains_content(&readme_file, 0, "# test_top");
-        file_contains_content(&readme_file, 1, "New Sliderule DOF component.");
+        file_contains_content(&readme_file, 1, "New Sliderule component.");
     }
 
     #[test]
