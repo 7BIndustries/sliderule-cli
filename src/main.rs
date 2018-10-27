@@ -523,7 +523,7 @@ fn generate_dot_file() {
 }
 
 /*
- * Reads a template to a string so that it can 
+ * Reads a template to a string so that it can be written to a new components directory structure.
  */
 fn render_template(template_name: &str, globals: &mut liquid::value::Object) -> String {
     // Figure out where the templates are stored
