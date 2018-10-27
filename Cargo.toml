@@ -7,3 +7,4 @@ authors = ["Jeremy Mack Wright <wrightjmf@gmail.com>"]
 argparse = "0.2.2"
 os_info = "1.0.3"
 walkdir = "2.2.5"
+liquid = "0.17"

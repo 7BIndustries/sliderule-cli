@@ -1,12 +1,14 @@
 extern crate argparse;
 extern crate os_info;
 extern crate walkdir;
+extern crate liquid;
 
 use std::io;
 use std::env;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use std::io::prelude::*;
 use argparse::{ArgumentParser, Store, List};
 use walkdir::WalkDir;
 
@@ -413,7 +415,11 @@ fn remove(name: &str) {
  */
 fn generate_readme(name: &str) {
     if !Path::new("README.md").exists() {
-        let contents = format!("# {}\r\nNew Sliderule DOF component.\r\n", name);
+        // Add the things that need to be put substituted into the README file
+        let mut globals = liquid::value::Object::new();
+        globals.insert("name".into(), liquid::value::Value::scalar(name.to_owned()));
+
+        let contents = render_template("README.md.liquid", &mut globals);
 
         // Write the temmplate text into the readme file
         match fs::write("README.md", contents) {
@@ -430,7 +436,11 @@ fn generate_readme(name: &str) {
 
 fn generate_bom(name: &str) {
     if !Path::new("bom_data.yaml").exists() {
-        let contents = format!("# Bill of Materials Data for {}\r\nparts:\r\n  component_1:\r\n    options:\r\n    - specific_component_variation\r\n    default_option: 0\r\n    quantity: 1\r\n    quantity_units: part\r\n    name: Sample Component\r\n    notes: ''\r\n\r\norder:\r\n  -component_1\r\n", name);
+        // Add the things that need to be put substituted into the BoM file
+        let mut globals = liquid::value::Object::new();
+        globals.insert("name".into(), liquid::value::Value::scalar(name.to_owned()));
+
+        let contents = render_template("bom_data.yaml.liquid", &mut globals);
 
         // Write the temmplate text into the readme file
         match fs::write("bom_data.yaml", contents) {
@@ -447,11 +457,11 @@ fn generate_bom(name: &str) {
 
 fn generate_package_json(name: &str) {
     if !Path::new("package.json").exists() {
-        let mut contents = String::new();
-        contents.push_str("{\r\n  \"name\": \"");
-        contents.push_str(&name);
-        let append: &str = "\",\r\n  \"version\": \"1.0.0\",\r\n  \"description\": \"Sliderule DOF component.\",\r\n  \"dependencies\": {\r\n  }\r\n}\r\n";
-        contents.push_str(append);
+        // Add the things that need to be put substituted into the package file
+        let mut globals = liquid::value::Object::new();
+        globals.insert("name".into(), liquid::value::Value::scalar(name.to_owned()));
+
+        let contents = render_template("package.json.liquid", &mut globals);
 
         // Write the contents into the file
         match fs::write("package.json", contents) {
@@ -471,7 +481,10 @@ fn generate_package_json(name: &str) {
  */
 fn generate_gitignore() {
     if !Path::new(".gitignore").exists() {
-        let contents: String = "# Dependency directories\r\nnode_modules/\r\n\r\n# Distribution directory\r\ndist/\r\n".to_string();
+        // Add the things that need to be put substituted into the gitignore file (none at this time)
+        let mut globals = liquid::value::Object::new();
+
+        let contents = render_template(".gitignore.liquid", &mut globals);
 
         // Write the contents to the file
         match fs::write(".gitignore", contents) {
@@ -491,7 +504,10 @@ fn generate_gitignore() {
  */
 fn generate_dot_file() {
     if !Path::new(".top").exists() {
-        let contents: String = "".to_string();
+        // Add the things that need to be put substituted into the .top file (none at this time)
+        let mut globals = liquid::value::Object::new();
+
+        let contents = render_template(".top.liquid", &mut globals);
 
         // Write the contents to the file
         match fs::write(".top", contents) {
@@ -504,6 +520,28 @@ fn generate_dot_file() {
     else {
         println!(".top already exists, using existing file and refusing to overwrite.");
     }
+}
+
+/*
+ * Reads a template to a string so that it can 
+ */
+fn render_template(template_name: &str, globals: &mut liquid::value::Object) -> String {
+    // Figure out where the templates are stored
+    let template_file = env::current_exe().unwrap().parent().unwrap().join("templates").join(template_name);
+
+    // Read the template file into a string so that it can be rendered using Liquid
+    let mut file = fs::File::open(&template_file).expect("Unable to open the file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Unable to read the file");
+
+    // Render the output of the template using Liquid
+    let template = liquid::ParserBuilder::with_liquid()
+        .build()
+        .parse(&contents).unwrap();
+
+    let output = template.render(globals).unwrap();
+
+    output
 }
 
 /*
