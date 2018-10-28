@@ -6,7 +6,7 @@ extern crate liquid;
 use std::io;
 use std::env;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::io::prelude::*;
 use argparse::{ArgumentParser, Store, List};
@@ -64,7 +64,7 @@ fn main() {
             npm_install("");
         }
         else {
-            eprintln!("ERROR: Subcommand of download not recognized.");
+            panic!("ERROR: Subcommand of download not recognized.");
         }
     }
     else if command == "upload" {
@@ -87,10 +87,10 @@ fn main() {
     else {
         // The user has to supply a command, and it needs to be recognized
         if args.is_empty() {
-            eprintln!("ERROR: Please supply an command to sliderule-cli.");
+            panic!("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options.");
         }
         else {
-            eprintln!("ERROR: Command not recognized: {}", command);
+            panic!("ERROR: Command not recognized: {}", command);
         }
     }
 }
@@ -114,7 +114,7 @@ fn create_component(name: &String) {
     match fs::create_dir(&component_dir) {
         Ok(dir) => dir,
         Err(error) => {
-            eprintln!("ERROR: Could not create dist directory: {:?}", error);
+            panic!("ERROR: Could not create dist directory: {:?}", error);
         }
     };
 
@@ -122,7 +122,7 @@ fn create_component(name: &String) {
     match env::set_current_dir(&component_dir) {
         Ok(dir) => dir,
         Err(e) => {
-            eprintln!("ERROR: Could not change into components directory: {}", e);
+            panic!("ERROR: Could not change into components directory: {}", e);
         }
     };
 
@@ -131,7 +131,7 @@ fn create_component(name: &String) {
         match fs::create_dir("components") {
             Ok(dir) => dir,
             Err(error) => {
-                eprintln!("ERROR: Could not create components directory: {:?}", error);
+                panic!("ERROR: Could not create components directory: {:?}", error);
             }
         };
     }
@@ -144,7 +144,7 @@ fn create_component(name: &String) {
         match fs::create_dir("dist") {
             Ok(dir) => dir,
             Err(error) => {
-                eprintln!("ERROR: Could not create dist directory: {:?}", error);
+                panic!("ERROR: Could not create dist directory: {:?}", error);
             }
         };
     }
@@ -157,7 +157,7 @@ fn create_component(name: &String) {
         match fs::create_dir("docs") {
             Ok(dir) => dir,
             Err(error) => {
-                eprintln!("ERROR: Could not create docs directory: {:?}", error);
+                panic!("ERROR: Could not create docs directory: {:?}", error);
             }
         };
     }
@@ -170,7 +170,7 @@ fn create_component(name: &String) {
         match fs::create_dir("source") {
             Ok(dir) => dir,
             Err(error) => {
-                eprintln!("ERROR: Could not create source directory: {:?}", error);
+                panic!("ERROR: Could not create source directory: {:?}", error);
             }
         };
     }
@@ -206,24 +206,21 @@ fn git_init(url: &str) {
         Ok(_) => println!("git repository initialized for project."),
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                eprintln!("ERROR: `git` was not found, please install");
+                panic!("ERROR: `git` was not found, please install");
             } else {
-                eprintln!("ERROR: Could not initialize git repository: {}", e);
+                panic!("ERROR: Could not initialize git repository: {}", e);
             }
         }
     }
 
     // Add the remote URL
     let output = Command::new("git").args(&["remote", "add", "origin", url]).output()
-        .expect("ERROR: Unable to set remote URL for project."); 
-    //{
-    //     Ok(_) => println!("Set git remote for project."),
-    //     Err(_) => println!("ERROR: Unable to set remote URL for project.")
-    // }
+        .expect("ERROR: Unable to set remote URL for project.");
 
-    println!("status: {}", output.status);
-    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+    // Let the user know if something went wrong
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
 
     println!("Done initializing git repository for project.");
 }
@@ -286,6 +283,8 @@ fn git_pull() {
     }
 }
 
+//TODO: Check stderr on any commands that have output
+
 fn git_clone(url: &str) {
     match Command::new("git").args(&["clone", "--recursive", url]).output() {
         Ok(_) => println!("Sucessfully cloned component repository."),
@@ -328,7 +327,7 @@ fn refactor(name: &str) {
     io::stdin().read_line(&mut url)
             .expect("ERROR: Failed to read name or URL from user.");
 
-    let orig_dir = env::current_dir().unwrap();
+    let orig_dir = get_cwd();
     let component_dir = Path::new("components").join(name);
 
     if component_dir.exists() {
@@ -336,7 +335,7 @@ fn refactor(name: &str) {
         match env::set_current_dir(&component_dir) {
             Ok(dir) => dir,
             Err(e) => {
-                eprintln!("ERROR: Could not change into components directory: {}", e);
+                panic!("ERROR: Could not change into components directory: {}", e);
             }
         };
 
@@ -348,7 +347,7 @@ fn refactor(name: &str) {
         match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
-                eprintln!("ERROR: Could not change into original parent directory: {}", e);
+                panic!("ERROR: Could not change into original parent directory: {}", e);
             }
         };
 
@@ -357,7 +356,7 @@ fn refactor(name: &str) {
         npm_install(&url.trim());
     }
     else {
-        eprintln!("ERROR: The component does not exist in the components directory.");
+        panic!("ERROR: The component does not exist in the components directory.");
     }
 }
 
@@ -388,7 +387,10 @@ fn remove(name: &str) {
 
         // Step through every file and directory in the path to be deleted and make sure that none are read-only
         for entry in WalkDir::new(&component_dir) {
-            let entry = entry.unwrap();
+            let entry = match entry {
+                Ok(ent) => ent,
+                Err(e) => panic!("ERROR: Could not handle entry while walking components directory tree: {}", e)
+            };
 
             // Remove read-only permissions on every entry
             let md = &entry.path().metadata().
@@ -425,7 +427,7 @@ fn generate_readme(name: &str) {
         match fs::write("README.md", contents) {
             Ok(res) => res,
             Err(error) => {
-                eprintln!("ERROR: Could not write to README.md file: {:?}", error);
+                panic!("ERROR: Could not write to README.md file: {:?}", error);
             } 
         };
     }
@@ -446,7 +448,7 @@ fn generate_bom(name: &str) {
         match fs::write("bom_data.yaml", contents) {
             Ok(res) => res,
             Err(error) => {
-                eprintln!("ERROR: Cound not write to bom_data.yaml: {:?}", error);
+                panic!("ERROR: Cound not write to bom_data.yaml: {:?}", error);
             } 
         };
     }
@@ -467,7 +469,7 @@ fn generate_package_json(name: &str) {
         match fs::write("package.json", contents) {
             Ok(res) => res,
             Err(error) => {
-                eprintln!("ERROR: Could not write to package.json: {:?}", error);
+                panic!("ERROR: Could not write to package.json: {:?}", error);
             }
         };
     }
@@ -490,7 +492,7 @@ fn generate_gitignore() {
         match fs::write(".gitignore", contents) {
             Ok(res) => res,
             Err(error) => {
-                eprintln!("ERROR: Cound not write to .gitignore: {:?}", error);
+                panic!("ERROR: Cound not write to .gitignore: {:?}", error);
             }
         };
     }
@@ -513,7 +515,7 @@ fn generate_dot_file() {
         match fs::write(".top", contents) {
             Ok(res) => res,
             Err(error) => {
-                eprintln!("ERROR: Could not write to .top: {:?}", error);
+                panic!("ERROR: Could not write to .top: {:?}", error);
             }
         };
     }
@@ -527,7 +529,15 @@ fn generate_dot_file() {
  */
 fn render_template(template_name: &str, globals: &mut liquid::value::Object) -> String {
     // Figure out where the templates are stored
-    let template_file = env::current_exe().unwrap().parent().unwrap().join("templates").join(template_name);
+    let template_file = match env::current_exe() {
+        Ok(path) => path,
+        Err(e) => panic!("ERROR: Could not get sliderule-cli executable directory: {}", e)
+    };
+    let template_file = match template_file.parent() {
+        Some(path) => path,
+        None => panic!("ERROR: Could not get parent of sliderule-cli executable directory.")
+    };
+    let template_file = template_file.join("templates").join(template_name);
 
     // Read the template file into a string so that it can be rendered using Liquid
     let mut file = fs::File::open(&template_file).expect("Unable to open the file");
@@ -578,9 +588,9 @@ fn npm_install(url: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                eprintln!("ERROR: `npm` was not found, please install it.");
+                panic!("ERROR: `npm` was not found, please install it.");
             } else {
-                eprintln!("ERROR: Could not install component from remote repository: {}", e);
+                panic!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
     }
@@ -615,10 +625,26 @@ fn npm_uninstall(name: &str) {
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                eprintln!("ERROR: `npm` was not found, please install it.");
+                panic!("ERROR: `npm` was not found, please install it.");
             } else {
-                eprintln!("ERROR: Could not install component from remote repository: {}", e);
+                panic!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
     }
+}
+
+/*
+ * Gets the current working directory for us, and handles any errors.
+ */
+fn get_cwd() -> PathBuf {
+    let path = env::current_dir();
+
+    let cwd = match path {
+        Ok(dir) => dir,
+        Err(e) => {
+            panic!("ERROR: Could not get current working directory: {}", e);
+       }
+    };
+
+    cwd
 }

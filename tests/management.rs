@@ -68,7 +68,7 @@ mod management {
             .output()
             .expect("failed to execute process");
     
-        assert_eq!(String::from_utf8_lossy(&output.stderr), "ERROR: Please supply an command to sliderule-cli.\n");
+        assert_eq!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."), true);
     }
 
     #[test]
