@@ -170,7 +170,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout).split("\n").collect::<Vec<&str>>()[0] , "Sucessfully cloned component repository.");
+        assert_eq!(String::from_utf8_lossy(&output.stdout), "Sucessfully cloned component repository.\n");
 
         // Verify that the proper directories and files within the top level compoent were created
         assert_eq!(Path::new("/tmp").join("blink").join("bom_data.yaml").exists(), true);

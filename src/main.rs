@@ -196,103 +196,6 @@ fn create_component(name: &String) {
 }
 
 /*
- * Uses the installed git command to initialize a project repo.
- */
-fn git_init(url: &str) {
-    println!("Working...");
-
-    // Initialize the current directory as a git repo
-    match Command::new("git").args(&["init"]).output() {
-        Ok(_) => println!("git repository initialized for project."),
-        Err(e) => {
-            if let std::io::ErrorKind::NotFound = e.kind() {
-                panic!("ERROR: `git` was not found, please install");
-            } else {
-                panic!("ERROR: Could not initialize git repository: {}", e);
-            }
-        }
-    }
-
-    // Add the remote URL
-    let output = Command::new("git").args(&["remote", "add", "origin", url]).output()
-        .expect("ERROR: Unable to set remote URL for project.");
-
-    // Let the user know if something went wrong
-    if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
-    }
-
-    println!("Done initializing git repository for project.");
-}
-
-/*
- * Adds, commits and pushes any changes to the remote git repo.
- */
-fn git_add_and_commit() {
-    let mut message = String::new();
-
-    // Get the commit message from the user to mark these changes with
-    println!("Message to attach to these project changes:");
-
-    io::stdin().read_line(&mut message)
-        .expect("ERROR: Failed to read change message line from user");
-
-    let output = Command::new("git").args(&["add", "."]).output()
-        .expect("ERROR: Unable to stage changes using git.");
-
-    println!("status: {}", output.status);
-    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-    // {
-    //     Ok(_) => println!("Staged changes for git."),
-    //     Err(_) => println!("ERROR: Unable to stage changes using git.")
-    // }
-
-    let output = Command::new("git").args(&["commit", "-m", &message]).output()
-        .expect("ERROR: Unable to push changes to remote git repository.");
-
-    println!("status: {}", output.status);
-    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-
-    // {
-    //     Ok(_) => println!("Created commit."),
-    //     Err(_) => println!("ERROR: Unable to create commit using git.")
-    // }
-
-    let output = Command::new("git").args(&["push", "origin", "master"]).output()
-        .expect("ERROR: Unable to push changes to remote git repository.");
-
-    println!("status: {}", output.status);
-    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-
-    // {
-    //     Ok(_) => println!("Pushed changes to remote git repository."),
-    //     Err(_) => println!("ERROR: Unable to push changes to remote git repository.")
-    // }
-}
-
-/*
- * Pulls latest updates from a component's git repo.
- */
-fn git_pull() {
-    match Command::new("git").args(&["pull", "origin", "master"]).output() {
-        Ok(_) => println!("Pulled changes from component repository."),
-        Err(_) => eprintln!("ERROR: Unable to pull changes from component repository.")
-    }
-}
-
-//TODO: Check stderr on any commands that have output
-
-fn git_clone(url: &str) {
-    match Command::new("git").args(&["clone", "--recursive", url]).output() {
-        Ok(_) => println!("Sucessfully cloned component repository."),
-        Err(_) => eprintln!("ERROR: Unable to clone component repository.")
-    }
-}
-
-/*
  * Uploads any changes to the project to the remote repository.
  */
 fn project_upload() {
@@ -545,13 +448,146 @@ fn render_template(template_name: &str, globals: &mut liquid::value::Object) -> 
     file.read_to_string(&mut contents).expect("Unable to read the file");
 
     // Render the output of the template using Liquid
-    let template = liquid::ParserBuilder::with_liquid()
+    let template = match liquid::ParserBuilder::with_liquid()
         .build()
-        .parse(&contents).unwrap();
+        .parse(&contents) {
+            Ok(temp) => temp,
+            Err(e) => panic!("ERROR: Could not parse template using Liquid: {}", e)
+        };
 
-    let output = template.render(globals).unwrap();
+    let output = match template.render(globals) {
+        Ok(out) => out,
+        Err(e) => panic!("ERROR: Could not render template using Liquid: {}", e)
+    };
 
     output
+}
+
+/*
+ * Uses the installed git command to initialize a project repo.
+ */
+fn git_init(url: &str) {
+    println!("Working...");
+
+    // Initialize the current directory as a git repo
+    let output = match Command::new("git").args(&["init"]).output() {
+        Ok(out) => {
+            println!("git repository initialized for project.");
+            out
+        },
+        Err(e) => {
+            if let std::io::ErrorKind::NotFound = e.kind() {
+                panic!("ERROR: `git` was not found, please install");
+            } else {
+                panic!("ERROR: Could not initialize git repository: {}", e);
+            }
+        }
+    };
+
+    // Let the user know if something went wrong
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+
+    // Add the remote URL
+    let output = match Command::new("git").args(&["remote", "add", "origin", url]).output() {
+        Ok(out) => {
+            println!("Done initializing git repository for project.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to set remote URL for project: {}", e)
+    };
+
+    // Let the user know if something went wrong
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+}
+
+/*
+ * Adds, commits and pushes any changes to the remote git repo.
+ */
+fn git_add_and_commit() {
+    let mut message = String::new();
+
+    // Get the commit message from the user to mark these changes with
+    println!("Message to attach to these project changes:");
+
+    io::stdin().read_line(&mut message)
+        .expect("ERROR: Failed to read change message line from user");
+
+    // git add .
+    let output = match Command::new("git").args(&["add", "."]).output() {
+        Ok(out) => {
+            println!("Changes staged using git.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to stage changes using git: {}", e)
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+
+    // git commit -m [message]
+    let output = match Command::new("git").args(&["commit", "-m", &message]).output() {
+        Ok(out) => {
+            println!("Changes committed using git.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to push changes to remote git repository: {}", e)
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+
+    // git push origin master
+    let output = match Command::new("git").args(&["push", "origin", "master"]).output() {
+        Ok(out) => {
+            println!("Changes pushed using git.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to push changes to remote git repository: {}", e)
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+}
+
+/*
+ * Pulls latest updates from a component's git repo.
+ */
+fn git_pull() {
+    let output = match Command::new("git").args(&["pull", "origin", "master"]).output() {
+        Ok(out) => {
+            println!("Pulled changes from component repository.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to pull changes from component repository: {}", e)
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
+}
+
+/*
+ * Interface to the git command to download a component from a repo.
+ */
+fn git_clone(url: &str) {
+    let output = match Command::new("git").args(&["clone", "--recursive", url]).output() {
+        Ok(out) => {
+            println!("Sucessfully cloned component repository.");
+            out
+        },
+        Err(e) => panic!("ERROR: Unable to clone component repository: {}", e)
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
+    }
 }
 
 /*
@@ -577,14 +613,16 @@ fn npm_install(url: &str) {
 
     println!("Working...");
 
-    match Command::new(&cmd_name).args(&vec).output() {
-        Ok(_) => {
+    let output = match Command::new(&cmd_name).args(&vec).output() {
+        Ok(out) => {
             if !url.is_empty() {
                 println!("Component installed from remote repository.");
             }
             else {
                 println!("Sliderule project updated.");
             }
+
+            out
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
@@ -593,6 +631,10 @@ fn npm_install(url: &str) {
                 panic!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
     }
 }
 
@@ -619,9 +661,11 @@ fn npm_uninstall(name: &str) {
 
     println!("Working...");
 
-    match Command::new(&cmd_name).args(&vec).output() {
-        Ok(_) => {
+    // Attempt to install the component using npm
+    let output = match Command::new(&cmd_name).args(&vec).output() {
+        Ok(out) => {
             println!("Component uninstalled using npm.");
+            out
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
@@ -630,6 +674,10 @@ fn npm_uninstall(name: &str) {
                 panic!("ERROR: Could not install component from remote repository: {}", e);
             }
         }
+    };
+
+    if !output.stderr.is_empty() {
+        panic!("ERROR: {:?}", output.stderr);
     }
 }
 
