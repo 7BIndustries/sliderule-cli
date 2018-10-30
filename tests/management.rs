@@ -253,7 +253,7 @@ mod management {
             .args(&["remove", "blink_firmware"])
             .output()
             .expect("failed to execute process");
-        eprintln!("{:?}", remove_output.stderr);
+
         assert_eq!(String::from_utf8_lossy(&remove_output.stdout).split("\n").collect::<Vec<&str>>()[2] , "Component uninstalled using npm.");
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
@@ -271,56 +271,72 @@ mod management {
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
-            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-            return;
+            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
         }
 
         // Check to see if the last test left things dirty
         if Path::new("/tmp").join("test_local_remove").exists() {
-            eprintln!("ERROR: Please delete /tmp/test_top before running these tests.");
-
-            return;
+            panic!("ERROR: Please delete /tmp/test_top before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         match env::set_current_dir("/tmp") {
             Ok(dir) => dir,
             Err(e) => {
-                eprintln!("ERROR: Could not change into tmp directory: {}", e);
-                return;
+                panic!("ERROR: Could not change into tmp directory: {}", e);
             }
         };
 
-        // Try to download the component
-        Command::new(&orig_path)
+        // Create the parent component so that we can test subcomponent removal
+        let create_output = match Command::new(&orig_path)
             .args(&["create", "test_local_remove"])
-            .output()
-            .expect("failed to execute process");
+            .output() {
+                Ok(out) => out,
+                Err(e) => panic!("ERROR: On calling CLI with 'create test_local_remove' as arguments: {}", e)
+            };
+
+        // Let the user know if something went wrong
+        if !create_output.stderr.is_empty() {
+            panic!("ERROR: {}", String::from_utf8_lossy(&create_output.stderr));
+        }
 
         match env::set_current_dir(Path::new("/tmp").join("test_local_remove")) {
-            Ok(dir) => dir,
+            Ok(_) => (),
             Err(e) => {
-                eprintln!("ERROR: Could not change into tmp directory: {}", e);
-                return;
+                panic!("ERROR: Could not change into tmp directory: {}", e);
             }
         };
 
         // The add command
-        let add_output = Command::new(&orig_path)
+        let add_output = match Command::new(&orig_path)
             .args(&["create", "local_test"])
-            .output()
-            .expect("failed to execute process");
+            .output() {
+                Ok(out) => out,
+                Err(e) => panic!("ERROR: On calling CLI with 'create local_test' as arguments: {}", e)
+            };
 
-        assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[0] , "Finished setting up component.");
+        // Let the user know if something went wrong
+        if !add_output.stderr.is_empty() {
+            panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
+        }
+
+        assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[0], "Finished setting up component.");
         assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), true);
 
          // The remove command
-        let remove_output = Command::new(&orig_path)
+        let remove_output = match Command::new(&orig_path)
             .args(&["remove", "local_test"])
-            .output()
-            .expect("failed to execute process");
+            .output() {
+                Ok(out) => out,
+                Err(e) => panic!("ERROR: On calling CLI with 'remove local_test' as arguments: {}", e)
+            };
 
-        assert_eq!(String::from_utf8_lossy(&remove_output.stdout).split("\n").collect::<Vec<&str>>()[2].contains("component removed") , true);
+        // Let the user know if something went wrong
+        if !remove_output.stderr.is_empty() {
+            panic!("ERROR: {}", String::from_utf8_lossy(&remove_output.stderr));
+        }
+
+        assert_eq!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed") , true);
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);

@@ -486,7 +486,7 @@ fn git_init(url: &str) {
 
     // Let the user know if something went wrong
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     // Add the remote URL
@@ -500,7 +500,7 @@ fn git_init(url: &str) {
 
     // Let the user know if something went wrong
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
@@ -526,7 +526,7 @@ fn git_add_and_commit() {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     // git commit -m [message]
@@ -539,7 +539,7 @@ fn git_add_and_commit() {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     // git push origin master
@@ -552,7 +552,7 @@ fn git_add_and_commit() {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
@@ -569,7 +569,7 @@ fn git_pull() {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
@@ -586,7 +586,7 @@ fn git_clone(url: &str) {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
@@ -634,7 +634,7 @@ fn npm_install(url: &str) {
     };
 
     if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
+        panic!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
@@ -662,7 +662,7 @@ fn npm_uninstall(name: &str) {
     println!("Working...");
 
     // Attempt to install the component using npm
-    let output = match Command::new(&cmd_name).args(&vec).output() {
+    match Command::new(&cmd_name).args(&vec).output() {
         Ok(out) => {
             println!("Component uninstalled using npm.");
             out
@@ -676,9 +676,9 @@ fn npm_uninstall(name: &str) {
         }
     };
 
-    if !output.stderr.is_empty() {
-        panic!("ERROR: {:?}", output.stderr);
-    }
+    // if !output.stderr.is_empty() {
+    //     eprintln!("ERROR: {}", String::from_utf8_lossy(&output.stderr));
+    // }
 }
 
 /*
