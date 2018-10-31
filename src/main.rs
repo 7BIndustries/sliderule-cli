@@ -99,6 +99,8 @@ fn main() {
  * Create a new Sliderule component or convert an existing project to being a Sliderule project.
  */
 fn create_component(name: &String) {
+    let mut license = String::new();
+
     // Check to see if the current directory is a component
     let is_component = Path::new("components").exists() && Path::new("bom_data.yaml").exists();
 
@@ -109,8 +111,11 @@ fn create_component(name: &String) {
     if !is_component {
         component_dir = Path::new(name).to_path_buf();
     }
+    else {
+        license = get_license();
+    }
 
-    // Create a directory for our component inside the components directory
+    // Create a directory for our component
     match fs::create_dir(&component_dir) {
         Ok(dir) => dir,
         Err(error) => {
@@ -184,8 +189,27 @@ fn create_component(name: &String) {
     // Generate bom_data.yaml
     generate_bom(&name);
 
+    // If we're creating a top-level component we want ot ask for a license directly, otherwise get it from the parent component
+    if !is_component {
+        // Ask the user for their license choice
+        println!("Please choose a license for this component.");
+        println!("For a list of available licenses see https://spdx.org/licenses/");
+        println!("Choice [Unlicense]:");
+        io::stdin().read_line(&mut license)
+            .expect("ERROR: Failed to read name or URL from user.");
+
+        // If the user didn't choose a license, default to The Unlicense
+        license = license.trim().to_string();
+        if license.is_empty() {
+            license = String::from("Unlicense");
+        }
+    }
+    else {
+        // TODO: Extract the license from the parent package.json
+    }
+
     // Generate package.json, if needed
-    generate_package_json(&name);
+    generate_package_json(&name, &license);
 
     // Generate the .top file that marks this as a top-level component
     if !is_component {
@@ -360,11 +384,12 @@ fn generate_bom(name: &str) {
     }
 }
 
-fn generate_package_json(name: &str) {
+fn generate_package_json(name: &str, license: &str) {
     if !Path::new("package.json").exists() {
         // Add the things that need to be put substituted into the package file
         let mut globals = liquid::value::Object::new();
         globals.insert("name".into(), liquid::value::Value::scalar(name.to_owned()));
+        globals.insert("license".into(), liquid::value::Value::scalar(license.to_owned()));
 
         let contents = render_template("package.json.liquid", &mut globals);
 
@@ -695,4 +720,35 @@ fn get_cwd() -> PathBuf {
     };
 
     cwd
+}
+
+/*
+ * Attempts to extract the license from the package.json file in the current directory.
+ */
+fn get_license() -> String {
+    let mut license = String::new();
+    let package_file = Path::new("package.json");
+
+    println!("Attempting to extract license from package.json.");
+
+    // Attempt to read the contents of package.json
+    let mut file = fs::File::open(&package_file).expect("ERROR: Unable to open the file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("ERROR: Unable to read the file");
+
+    // Make sure that there's a license entry in the package.json file for us to extract
+    if !contents.contains("license") {
+        panic!("ERROR: No package.json file to extract the license from.");
+    }
+
+    // Step through all the lines and attempt to find the license entry
+    let lines = contents.split("\n");
+    for line in lines {
+        if line.contains("license") {
+            let part: Vec<&str> = line.split(":").collect();
+            license = String::from(part[1].replace("\"", "").trim());
+        }
+    }
+
+    license
 }
