@@ -99,7 +99,8 @@ fn main() {
  * Create a new Sliderule component or convert an existing project to being a Sliderule project.
  */
 fn create_component(name: &String) {
-    let mut license = String::new();
+    let mut source_license = String::new();
+    let mut doc_license = String::new();
 
     // Check to see if the current directory is a component
     let is_component = Path::new("components").exists() && Path::new("bom_data.yaml").exists();
@@ -112,7 +113,8 @@ fn create_component(name: &String) {
         component_dir = Path::new(name).to_path_buf();
     }
     else {
-        license = get_license();
+        source_license = get_license(true);
+        doc_license = get_license(false);
     }
 
     // Create a directory for our component
@@ -191,30 +193,42 @@ fn create_component(name: &String) {
 
     // If we're creating a top-level component we want ot ask for a license directly, otherwise get it from the parent component
     if !is_component {
-        // Ask the user for their license choice
-        println!("Please choose a license for this component.");
+        // Ask the user for their license choice for the source of this component
+        println!("Please choose a source license for this component.");
         println!("For a list of available licenses see https://spdx.org/licenses/");
         println!("Choice [Unlicense]:");
-        io::stdin().read_line(&mut license)
-            .expect("ERROR: Failed to read name or URL from user.");
+        io::stdin().read_line(&mut source_license)
+            .expect("ERROR: Failed to read name or license from user.");
 
         // If the user didn't choose a license, default to The Unlicense
-        license = license.trim().to_string();
-        if license.is_empty() {
-            license = String::from("Unlicense");
+        source_license = source_license.trim().to_string();
+        if source_license.is_empty() {
+            source_license = String::from("Unlicense");
         }
-    }
-    else {
-        // TODO: Extract the license from the parent package.json
+
+        // Ask the user for their license choice for the documentation of this component
+        println!("Please choose a documentation license for this component.");
+        println!("For a list of available licenses see https://spdx.org/licenses/");
+        println!("Choice [CC-BY-4.0]:");
+        io::stdin().read_line(&mut doc_license)
+            .expect("ERROR: Failed to read name or license from user.");
+
+        // If the user didn't choose a license, default to The Unlicense
+        doc_license = doc_license.trim().to_string();
+        if doc_license.is_empty() {
+            doc_license = String::from("CC-BY-4.0");
+        }
     }
 
     // Generate package.json, if needed
-    generate_package_json(&name, &license);
+    generate_package_json(&name, &source_license);
 
-    // Generate the .top file that marks this as a top-level component
+    // Generate the .sr file that provides extra information about this component
+    let mut is_top = false;
     if !is_component {
-        generate_dot_file();
+        is_top = true;
     }
+    generate_dot_file(is_top, &source_license, &doc_license);
 
     println!("Finished setting up component.");
 }
@@ -432,15 +446,18 @@ fn generate_gitignore() {
 /*
  * Generates the dot file that tracks whether this is a top level component/project or a subcomponent
  */
-fn generate_dot_file() {
+fn generate_dot_file(is_top: bool, source_license: &str, doc_license: &str) {
     if !Path::new(".top").exists() {
         // Add the things that need to be put substituted into the .top file (none at this time)
         let mut globals = liquid::value::Object::new();
+        globals.insert("is_top".into(), liquid::value::Value::scalar(is_top.to_owned()));
+        globals.insert("source_license".into(), liquid::value::Value::scalar(source_license.to_owned()));
+        globals.insert("doc_license".into(), liquid::value::Value::scalar(doc_license.to_owned()));
 
-        let contents = render_template(".top.liquid", &mut globals);
+        let contents = render_template(".sr.liquid", &mut globals);
 
         // Write the contents to the file
-        match fs::write(".top", contents) {
+        match fs::write(".sr", contents) {
             Ok(res) => res,
             Err(error) => {
                 panic!("ERROR: Could not write to .top: {:?}", error);
@@ -448,7 +465,7 @@ fn generate_dot_file() {
         };
     }
     else {
-        println!(".top already exists, using existing file and refusing to overwrite.");
+        println!(".sr already exists, using existing file and refusing to overwrite.");
     }
 }
 
@@ -725,14 +742,14 @@ fn get_cwd() -> PathBuf {
 /*
  * Attempts to extract the license from the package.json file in the current directory.
  */
-fn get_license() -> String {
+fn get_license(is_top: bool) -> String {
     let mut license = String::new();
-    let package_file = Path::new("package.json");
+    let sr_file = Path::new(".sr");
 
     println!("Attempting to extract license from package.json.");
 
     // Attempt to read the contents of package.json
-    let mut file = fs::File::open(&package_file).expect("ERROR: Unable to open the file");
+    let mut file = fs::File::open(&sr_file).expect("ERROR: Unable to open the file");
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect("ERROR: Unable to read the file");
 
@@ -744,9 +761,18 @@ fn get_license() -> String {
     // Step through all the lines and attempt to find the license entry
     let lines = contents.split("\n");
     for line in lines {
-        if line.contains("license") {
+        // Make sure that we're extracting the proper license at the proper time
+        if line.contains("source_license") && !is_top {
+            continue;
+        }
+        else if line.contains("documentation_license") && is_top {
+            continue;
+        }
+
+        if line.contains("source_license") || line.contains("documentation_license") {
             let part: Vec<&str> = line.split(":").collect();
             license = String::from(part[1].replace("\"", "").trim());
+            license = license.replace(",", "");
         }
     }
 
