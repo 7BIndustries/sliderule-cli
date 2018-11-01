@@ -16,6 +16,8 @@ fn main() {
     // What main command the user is wanting to use
     let mut command = String::new();
     let mut args: Vec<String> = Vec::new();
+    let mut src_license = String::new();
+    let mut docs_license = String::new();
 
     // Parse the command line arguments
     {
@@ -25,15 +27,18 @@ fn main() {
             .add_argument("command", Store, "Sliderule command to run");
         ap.refer(&mut args)
             .add_argument("arguments", List, r#"Arguments for command"#);
+        ap.refer(&mut src_license)
+            .add_option(&["-s"], Store, "Specify a source license on the command line.");
+        ap.refer(&mut docs_license)
+            .add_option(&["-d"], Store, "Specify a documentation license on the command line.");
         ap.parse_args_or_exit();
     }
 
     // Handle the command line arguments
     if command == "create" {
-        // The user is supposed to pass a name for the component in as an argument
         let name = &args[0];
 
-        create_component(&name);
+        create_component(&name, &src_license, &docs_license);
     }
     else if command == "add" {
         // The user is expected to have provided a URL of a remote component that can be downloaded
@@ -98,7 +103,7 @@ fn main() {
 /*
  * Create a new Sliderule component or convert an existing project to being a Sliderule project.
  */
-fn create_component(name: &String) {
+fn create_component(name: &String, src_license: &String, docs_license: &String) {
     let mut source_license = String::new();
     let mut doc_license = String::new();
 
@@ -193,30 +198,40 @@ fn create_component(name: &String) {
 
     // If we're creating a top-level component we want ot ask for a license directly, otherwise get it from the parent component
     if !is_component {
-        // Ask the user for their license choice for the source of this component
-        println!("Please choose a source license for this component.");
-        println!("For a list of available licenses see https://spdx.org/licenses/");
-        println!("Choice [Unlicense]:");
-        io::stdin().read_line(&mut source_license)
-            .expect("ERROR: Failed to read name or license from user.");
+        // Ask the user for their license choice for the source of this component if they haven't specified it on the command line
+        if src_license.is_empty() {
+            println!("Please choose a source license for this component.");
+            println!("For a list of available licenses see https://spdx.org/licenses/");
+            println!("Choice [Unlicense]:");
+            io::stdin().read_line(&mut source_license)
+                .expect("ERROR: Failed to read name or license from user.");
 
-        // If the user didn't choose a license, default to The Unlicense
-        source_license = source_license.trim().to_string();
-        if source_license.is_empty() {
-            source_license = String::from("Unlicense");
+            // If the user didn't choose a license, default to The Unlicense
+            source_license = source_license.trim().to_string();
+            if source_license.is_empty() {
+                source_license = String::from("Unlicense");
+            }
+        }
+        else {
+            source_license = src_license.to_string();
         }
 
-        // Ask the user for their license choice for the documentation of this component
-        println!("Please choose a documentation license for this component.");
-        println!("For a list of available licenses see https://spdx.org/licenses/");
-        println!("Choice [CC-BY-4.0]:");
-        io::stdin().read_line(&mut doc_license)
-            .expect("ERROR: Failed to read name or license from user.");
+        if docs_license.is_empty() {
+            // Ask the user for their license choice for the documentation of this component
+            println!("Please choose a documentation license for this component.");
+            println!("For a list of available licenses see https://spdx.org/licenses/");
+            println!("Choice [CC-BY-4.0]:");
+            io::stdin().read_line(&mut doc_license)
+                .expect("ERROR: Failed to read name or license from user.");
 
-        // If the user didn't choose a license, default to The Unlicense
-        doc_license = doc_license.trim().to_string();
-        if doc_license.is_empty() {
-            doc_license = String::from("CC-BY-4.0");
+            // If the user didn't choose a license, default to The Unlicense
+            doc_license = doc_license.trim().to_string();
+            if doc_license.is_empty() {
+                doc_license = String::from("CC-BY-4.0");
+            }
+        }
+        else {
+            doc_license = docs_license.to_string();
         }
     }
 

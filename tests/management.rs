@@ -105,7 +105,7 @@ mod management {
 
         // Verify that the directory was created
         let output = Command::new(orig_path)
-            .args(&["create", "test_top"])
+            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_top"])
             .output()
             .expect("failed to execute process");
 
@@ -128,7 +128,7 @@ mod management {
         file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
         file_contains_content(&bom_file, 12, "-component_1");
         file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "\"dependencies\": {");
+        file_contains_content(&package_file, 4, "\"license\": \"NotASourceLicense\",");
         file_contains_content(&readme_file, 0, "# test_top");
         file_contains_content(&readme_file, 1, "New Sliderule component.");
     }
@@ -320,7 +320,7 @@ mod management {
             panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
         }
 
-        assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[0], "Finished setting up component.");
+        assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[2], "Finished setting up component.");
         assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), true);
 
          // The remove command
