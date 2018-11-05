@@ -78,6 +78,8 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 ## Compiling It Yourself
 
+[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
+
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program. Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ### Linux
 ```
@@ -88,6 +90,8 @@ Once the build has completed successfully, the sliderule-cli binary (sliderule-c
 ## Running Tests
 
 At this time, tests will only run in Linux and MacOS.
+
+[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
