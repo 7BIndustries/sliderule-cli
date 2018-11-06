@@ -3,11 +3,15 @@ echo off
 :: Run the cargo command to build the app
 cargo %1 %2
 
+:: Get the parent directory
+for %%a in ("%CD%") do set "parent_dir=%%~dpa"
+
 :: Some of the directories we need to work with
-set template_dir=%CD%\templates
+set template_dir=%parent_dir%sliderule_impl\templates
 set debug_dir=%CD%\target\debug\
 set release_dir=%CD%\target\release\
 
+echo %parent_dir%
 echo %template_dir%
 echo %debug_dir%
 echo %release_dir%
