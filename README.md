@@ -12,7 +12,7 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 ### Windows
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
-- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181017_1.zip) of sliderule-cli.
+- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181102.zip) of sliderule-cli.
 - Extract the archive to a convenient location (i.e. `C:\Users\[you]\`).
 - Run the command with the full path (i.e. `C:\Users\[you]\sliderule-cli\sliderule-cli.exe`).
 
@@ -27,7 +27,7 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
-- Download the [latest Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x64_20181017_1.tar.xz) of sliderule-cli.
+- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181102.tar.xz) (most computers) or the [latest arm64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_arm64_20181102.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
 - Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
 
@@ -40,7 +40,7 @@ $ ln -s ~/bin/sliderule-cli/sliderule-cli ~/bin/sr
 
 - [Install git](https://git-scm.com/download/mac)
 - [Install npm](https://www.npmjs.com/package/npm#apple-macintosh-computers)
-- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181017_1.zip) of sliderule-cli.
+- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181102.zip) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/Applications`).
 - Run the command with the full path (i.e. `~/Applications/sliderule-cli/sliderule-cli`).
 
@@ -64,7 +64,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 7. Use `sliderule-cli upload` and provide a message when prompted to upload all of the changes made within the project's file structure to its remote repository. If the current project is not set up for a remote repository, the CLI will prompt for a URL. The remote repository must already exist, and is not created by the CLI.
 
 ### Command Listing
-- `sliderule-cli create [name]` - Creates a new component.
+- `sliderule-cli create [name] [-s SOURCE_LICENSE] [-d DOCUMENTATION_LICENSE]` - Creates a new component.
   - If the current directory is not a component, a `name` directory is created in the current directory, assuming the user has write access. The new directory is then initialized as a new top-level Sliderule project component, with files and directories being created as needed to match the Sliderule methodology.
   - If the current directory is already a component, creates a new local component `name` from scratch and places it within the `components` directory of the current project.
 - `sliderule-cli download [all | dependencies | component_url]` - Downloads updates for the Sliderule project in the current directory.
@@ -78,16 +78,20 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 ## Compiling It Yourself
 
+[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
+
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program. Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ### Linux
 ```
-./make.sh build
+./make.sh build [--release]
 ```
 Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
 
 ## Running Tests
 
 At this time, tests will only run in Linux and MacOS.
+
+[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
