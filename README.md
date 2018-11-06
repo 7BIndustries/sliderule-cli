@@ -27,7 +27,7 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
-- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181102.tar.xz) (most computers) or the [latest armv7 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_armv7_20181102.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
+- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181102.tar.xz) (most computers) or the [latest arm64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_arm64_20181102.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
 - Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
 
