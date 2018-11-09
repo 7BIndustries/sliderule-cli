@@ -250,7 +250,7 @@ mod management {
 
         // The remove command
         let remove_output = Command::new(&orig_path)
-            .args(&["remove", "blink_firmware"])
+            .args(&["remove", "-y", "blink_firmware"])
             .output()
             .expect("failed to execute process");
 
@@ -325,7 +325,7 @@ mod management {
 
          // The remove command
         let remove_output = match Command::new(&orig_path)
-            .args(&["remove", "local_test"])
+            .args(&["remove", "-y", "local_test"])
             .output() {
                 Ok(out) => out,
                 Err(e) => panic!("ERROR: On calling CLI with 'remove local_test' as arguments: {}", e)

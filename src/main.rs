@@ -2,7 +2,7 @@ extern crate argparse;
 extern crate sliderule_impl;
 
 use std::io;
-use argparse::{ArgumentParser, Store, List};
+use argparse::{ArgumentParser, Store, StoreTrue, List};
 use sliderule_impl::sliderule;
 
 fn main() {
@@ -11,6 +11,7 @@ fn main() {
     let mut args: Vec<String> = Vec::new();
     let mut src_license = String::new();
     let mut docs_license = String::new();
+    let mut yes_mode_active = false;
 
     // Parse the command line arguments
     {
@@ -24,6 +25,8 @@ fn main() {
             .add_option(&["-s"], Store, "Specify a source license on the command line.");
         ap.refer(&mut docs_license)
             .add_option(&["-d"], Store, "Specify a documentation license on the command line.");
+        ap.refer(&mut yes_mode_active)
+            .add_option(&["-y"], StoreTrue, "Answers yes to any questions for unattended operation.");
         ap.parse_args_or_exit();
     }
 
@@ -74,19 +77,21 @@ fn main() {
     else if command == "remove" {
         let name = &args[0];
 
-        // let mut answer = String::new();
+        if !yes_mode_active {
+            let mut answer = String::new();
 
-        // println!("Type Y/y and hit enter to continue removing this component: {}", name);
+            println!("Type Y/y and hit enter to continue removing this component: {}", name);
 
-        // io::stdin().read_line(&mut answer)
-        //     .expect("ERROR: Failed to read answer from user.");
+            io::stdin().read_line(&mut answer)
+                .expect("ERROR: Failed to read answer from user.");
 
-        // Make sure that the answer was really yes on removal of the component
-        // if &answer.trim().to_uppercase() != "Y" {
-        //     println!("Aborting component removal.");
+            // Make sure that the answer was really yes on removal of the component
+            if &answer.trim().to_uppercase() != "Y" {
+                println!("Aborting component removal.");
 
-        //     return;
-        // }
+                return;
+            }
+        }
 
         println!("Remove called with {}.", name);
 
