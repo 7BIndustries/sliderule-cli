@@ -1,6 +1,7 @@
 extern crate argparse;
 extern crate sliderule_impl;
 
+use std::io;
 use argparse::{ArgumentParser, Store, List};
 use sliderule_impl::sliderule;
 
@@ -29,6 +30,11 @@ fn main() {
     // Handle the command line arguments
     if command == "create" {
         let name = &args[0];
+
+        // Find out what licenses the user wants to use
+        let licenses = ask_for_licenses(false);
+        src_license = licenses.0;
+        docs_license = licenses.1;
 
         sliderule::create_component(&name, &src_license, &docs_license);
     }
@@ -68,6 +74,20 @@ fn main() {
     else if command == "remove" {
         let name = &args[0];
 
+        // let mut answer = String::new();
+
+        // println!("Type Y/y and hit enter to continue removing this component: {}", name);
+
+        // io::stdin().read_line(&mut answer)
+        //     .expect("ERROR: Failed to read answer from user.");
+
+        // Make sure that the answer was really yes on removal of the component
+        // if &answer.trim().to_uppercase() != "Y" {
+        //     println!("Aborting component removal.");
+
+        //     return;
+        // }
+
         println!("Remove called with {}.", name);
 
         // Deletes a local component's directory, or npm uninstalls a remote component
@@ -79,6 +99,13 @@ fn main() {
         // Convert the local component into a remote component
         sliderule::refactor(name);
     }
+    else if command == "change_license" {
+        let licenses = ask_for_licenses(true);
+        src_license = licenses.0;
+        docs_license = licenses.1;
+
+        sliderule::change_licenses(&src_license, &docs_license);
+    }
     else {
         // The user has to supply a command, and it needs to be recognized
         if args.is_empty() {
@@ -88,4 +115,51 @@ fn main() {
             panic!("ERROR: Command not recognized: {}", command);
         }
     }
+}
+
+/*
+ * Prompt the user to ask for licenses.
+ */
+fn ask_for_licenses(display_anyway: bool) -> (String, String) {
+    let licenses = sliderule::get_licenses();
+    let default_src_license = licenses.0;
+    let default_docs_lic = licenses.1;
+
+    let mut source_license = String::new();
+    let mut doc_license = String::new();
+
+    // Ask the user for their license choice for the source of this component if they haven't specified it on the command line
+    if sliderule::get_level() == 0 || display_anyway {
+        // Ask the user to choose a source license
+        println!("Please choose a source license for this component.");
+        println!("For a list of available licenses see https://spdx.org/licenses/");
+        println!("Choice [{}]:", default_src_license);
+        io::stdin().read_line(&mut source_license)
+            .expect("ERROR: Failed to read name or license from user.");
+
+        // If the user didn't choose a license, default to The Unlicense
+        source_license = source_license.trim().to_string();
+    }
+
+    // Ask the user for their license choice for the documentation of this component
+    if sliderule::get_level() == 0 || display_anyway {
+        println!("Please choose a documentation license for this component.");
+        println!("For a list of available licenses see https://spdx.org/licenses/");
+        println!("Choice [{}]:", default_docs_lic);
+        io::stdin().read_line(&mut doc_license)
+            .expect("ERROR: Failed to read name or license from user.");
+
+        // If the user didn't choose a license, default to The Unlicense
+        doc_license = doc_license.trim().to_string();
+    }
+
+    // If we didn't get anything, we need to stick with the default
+    if source_license.is_empty() {
+        source_license = default_src_license;
+    }
+    if doc_license.is_empty() {
+        doc_license = default_docs_lic;
+    }
+
+    (source_license, doc_license)
 }
