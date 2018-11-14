@@ -128,7 +128,7 @@ mod management {
         file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
         file_contains_content(&bom_file, 12, "-component_1");
         file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "\"license\": \"Unlicense\",");
+        file_contains_content(&package_file, 4, "\"license\": \"Unlicense AND CC-BY-4.0\",");
         file_contains_content(&readme_file, 0, "# test_top");
         file_contains_content(&readme_file, 1, "New Sliderule component.");
     }
@@ -164,7 +164,7 @@ mod management {
             }
         };
 
-        // Try to donwload the component
+        // Try to download the component
         let output = Command::new(orig_path)
             .args(&["download", "https://github.com/m30-jrs/blink.git"])
             .output()

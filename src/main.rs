@@ -72,7 +72,7 @@ fn main() {
         }
     }
     else if command == "upload" {
-        sliderule::project_upload();
+        sliderule::upload_project();
     }
     else if command == "remove" {
         let name = &args[0];
@@ -104,7 +104,7 @@ fn main() {
         // Convert the local component into a remote component
         sliderule::refactor(name);
     }
-    else if command == "change_license" {
+    else if command == "change_licenses" {
         let licenses = ask_for_licenses(true);
         src_license = licenses.0;
         docs_license = licenses.1;
