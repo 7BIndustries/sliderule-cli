@@ -7,7 +7,7 @@ cargo %1 %2
 for %%a in ("%CD%") do set "parent_dir=%%~dpa"
 
 :: Some of the directories we need to work with
-set template_dir=%parent_dir%sliderule_impl\templates
+set template_dir=%parent_dir%sliderule-rs\templates
 set debug_dir=%CD%\target\debug\
 set release_dir=%CD%\target\release\
 
