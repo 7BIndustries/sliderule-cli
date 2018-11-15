@@ -36,8 +36,14 @@ fn main() {
 
         // Find out what licenses the user wants to use
         let licenses = ask_for_licenses(false);
-        src_license = licenses.0;
-        docs_license = licenses.1;
+
+        // Handle the occurrence of someone specifying licenses on the command line
+        if src_license.is_empty() {
+            src_license = licenses.0;
+        }
+        if docs_license.is_empty() {
+            docs_license = licenses.1;
+        }
 
         sliderule::create_component(&name, &src_license, &docs_license);
     }
@@ -104,12 +110,28 @@ fn main() {
         // Convert the local component into a remote component
         sliderule::refactor(name);
     }
-    else if command == "change_licenses" {
-        let licenses = ask_for_licenses(true);
-        src_license = licenses.0;
-        docs_license = licenses.1;
+    else if command == "licenses" {
+        let subcommand = &args[0];
 
-        sliderule::change_licenses(&src_license, &docs_license);
+        if subcommand == "change" {
+            let licenses = ask_for_licenses(true);
+
+            // Handle the occurrence of someone specifying licenses on the command line
+            if src_license.is_empty() {
+                src_license = licenses.0;
+            }
+            if docs_license.is_empty() {
+                docs_license = licenses.1;
+            }
+
+            sliderule::change_licenses(&src_license, &docs_license);
+        }
+        else if subcommand == "list" {
+            sliderule::list_all_licenses();
+        }
+        else {
+            panic!("licenses subcommand not understood: {}", subcommand);
+        }
     }
     else {
         // The user has to supply a command, and it needs to be recognized

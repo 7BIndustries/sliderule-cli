@@ -18,6 +18,8 @@ mod management {
     struct Blink;
     struct TestBlank;
     struct TestLocalRemove;
+    struct TestChangeLicense;
+    struct TestListLicenses;
 
     impl Drop for Noisy {
         fn drop(&mut self) {
@@ -34,7 +36,7 @@ mod management {
             // Clean up after ourselves
             if Path::new("/tmp").join("blink").exists() {
                 fs::remove_dir_all(Path::new("/tmp").join("blink"))
-                    .expect("ERROR: not able to delete top levelcomponent directory.");
+                    .expect("ERROR: not able to delete top level component directory.");
             }
         }
     }
@@ -44,7 +46,7 @@ mod management {
             // Clean up after ourselves
             if Path::new("/tmp").join("test_blank").exists() {
                 fs::remove_dir_all(Path::new("/tmp").join("test_blank"))
-                    .expect("ERROR: not able to delete top levelcomponent directory.");
+                    .expect("ERROR: not able to delete top level component directory.");
             }
         }
     }
@@ -54,7 +56,27 @@ mod management {
             // Clean up after ourselves
             if Path::new("/tmp").join("test_local_remove").exists() {
                 fs::remove_dir_all(Path::new("/tmp").join("test_local_remove"))
-                    .expect("ERROR: not able to delete top levelcomponent directory.");
+                    .expect("ERROR: not able to delete top level component directory.");
+            }
+        }
+    }
+
+    impl Drop for TestChangeLicense {
+        fn drop(&mut self) {
+            // Clean up after ourselves
+            if Path::new("/tmp").join("test_top_license").exists() {
+                fs::remove_dir_all(Path::new("/tmp").join("test_top_license"))
+                    .expect("ERROR: not able to delete top level component directory.");
+            }
+        }
+    }
+
+    impl Drop for TestListLicenses {
+        fn drop(&mut self) {
+            // Clean up after ourselves
+            if Path::new("/tmp").join("test_list_licenses").exists() {
+                fs::remove_dir_all(Path::new("/tmp").join("test_list_licenses"))
+                    .expect("ERROR: not able to delete top level component directory.");
             }
         }
     }
@@ -78,7 +100,8 @@ mod management {
      */
     fn test_create_top_level_component_structure() {
         let _my_setup = Noisy;
-        let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -109,9 +132,18 @@ mod management {
             .output()
             .expect("failed to execute process");
 
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
         assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
 
-        // Verify that the proper directories and files within the top level compoent were created
+        // Verify that the proper directories and files within the top level component were created
         assert_eq!(Path::new("/tmp").join("test_top").join("bom_data.yaml").exists(), true);
         assert_eq!(Path::new("/tmp").join("test_top").join("components").exists(), true);
         assert_eq!(Path::new("/tmp").join("test_top").join("dist").exists(), true);
@@ -123,14 +155,17 @@ mod management {
         let bom_file = Path::new("/tmp").join("test_top").join("bom_data.yaml");
         let package_file = Path::new("/tmp").join("test_top").join("package.json");
         let readme_file = Path::new("/tmp").join("test_top").join("README.md");
+        let dot_file = Path::new("/tmp").join("test_top").join(".sr");
 
         // Check the content of the files and directories as appropriate here
         file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
         file_contains_content(&bom_file, 12, "-component_1");
         file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "\"license\": \"Unlicense AND CC-BY-4.0\",");
+        file_contains_content(&package_file, 4, "\"license\": \"NotASourceLicense AND NotADocLicense\",");
         file_contains_content(&readme_file, 0, "# test_top");
         file_contains_content(&readme_file, 1, "New Sliderule component.");
+        file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
+        file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
     }
 
     #[test]
@@ -139,7 +174,8 @@ mod management {
      */
     fn test_download_component() {
         let _my_setup = Blink;
-        let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -169,6 +205,15 @@ mod management {
             .args(&["download", "https://github.com/m30-jrs/blink.git"])
             .output()
             .expect("failed to execute process");
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
 
         assert_eq!(String::from_utf8_lossy(&output.stdout), "Successfully cloned component repository.\n");
 
@@ -200,7 +245,8 @@ mod management {
      */
     fn test_add_remove_component() {
         let _my_setup = TestBlank;
-        let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -245,6 +291,15 @@ mod management {
             .output()
             .expect("failed to execute process");
 
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
         assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[1] , "Component installed from remote repository.");
         assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), true);
 
@@ -266,7 +321,8 @@ mod management {
      */
     fn test_remove_local() {
         let _my_setup = TestLocalRemove;
-        let orig_path = env::current_dir().unwrap().join("target").join("debug").join("sliderule-cli");
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -276,7 +332,7 @@ mod management {
 
         // Check to see if the last test left things dirty
         if Path::new("/tmp").join("test_local_remove").exists() {
-            panic!("ERROR: Please delete /tmp/test_top before running these tests.");
+            panic!("ERROR: Please delete /tmp/test_local_remove before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
@@ -287,7 +343,7 @@ mod management {
             }
         };
 
-        // Create the parent component so that we can test subcomponent removal
+        // Create the parent component so that we can test sub-component removal
         let create_output = match Command::new(&orig_path)
             .args(&["create", "test_local_remove"])
             .output() {
@@ -320,6 +376,15 @@ mod management {
             panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
         }
 
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
         assert_eq!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."), true);
         assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), true);
 
@@ -340,6 +405,145 @@ mod management {
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);
+    }
+
+    #[test]
+    fn test_change_license() {
+        let _my_setup = TestChangeLicense;
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+
+        // The test framework doesn't support Windows at this time
+        let info = os_info::get();
+        if info.os_type() == os_info::Type::Windows {
+            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
+            return;
+        }
+
+        // Check to see if the last test left things dirty
+        if Path::new("/tmp").join("test_top_license").exists() {
+            eprintln!("ERROR: Please delete /tmp/test_top_license before running these tests.");
+
+            return;
+        }
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Verify that the directory was created
+        let output = Command::new(&orig_path)
+            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_top_license"])
+            .output()
+            .expect("failed to execute process");
+
+        let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
+        let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
+
+        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+
+        file_contains_content(&package_file, 4, "\"license\": \"NotASourceLicense AND NotADocLicense\",");
+        file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
+        file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
+
+        match env::set_current_dir("/tmp/test_top_license") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Change the license and verify
+        Command::new(orig_path)
+            .args(&["licenses", "change", "-s", "Unlicense", "-d", "CC-BY-4.0"])
+            .output()
+            .expect("failed to execute process");
+
+        let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
+        let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
+
+        file_contains_content(&package_file, 4, "\"license\": \"Unlicense AND CC-BY-4.0\",");
+        file_contains_content(&dot_file, 0, "source_license: Unlicense,");
+        file_contains_content(&dot_file, 1, "documentation_license: CC-BY-4.0");
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
+    }
+
+    #[test]
+    fn test_list_licenses() {
+        let _my_setup = TestListLicenses;
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+
+        // The test framework doesn't support Windows at this time
+        let info = os_info::get();
+        if info.os_type() == os_info::Type::Windows {
+            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
+            return;
+        }
+
+        // Check to see if the last test left things dirty
+        if Path::new("/tmp").join("test_list_licenses").exists() {
+            eprintln!("ERROR: Please delete /tmp/test_list_licenses before running these tests.");
+
+            return;
+        }
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Verify that the directory was created
+        let output = Command::new(&orig_path)
+            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_list_licenses"])
+            .output()
+            .expect("failed to execute process");
+
+        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+
+        match env::set_current_dir(Path::new("/tmp").join("test_list_licenses")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+        println!("{:?}", &orig_path);
+        // Change the license and verify
+        let output = Command::new(&orig_path)
+            .args(&["licenses", "list"])
+            .output()
+            .expect("failed to execute process");
+
+        // println!("{:?}", output.stderr);
+        assert_eq!(String::from_utf8_lossy(&output.stdout), "Licenses Specified In This Component:\nPath: /tmp/test_list_licenses, Source License: NotASourceLicense, Documentation License: NotADocLicense\n");
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
     }
 
     /*
