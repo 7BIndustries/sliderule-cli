@@ -12,7 +12,7 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 ### Windows
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
-- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181102.zip) of sliderule-cli.
+- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181115.zip) of sliderule-cli.
 - Extract the archive to a convenient location (i.e. `C:\Users\[you]\`).
 - Run the command with the full path (i.e. `C:\Users\[you]\sliderule-cli\sliderule-cli.exe`).
 
@@ -27,7 +27,7 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
-- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181102.tar.xz) (most computers) or the [latest arm64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_arm64_20181102.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
+- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181115.tar.xz) (most computers) or the [latest arm64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_arm64_20181115.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
 - Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
 
@@ -40,7 +40,7 @@ $ ln -s ~/bin/sliderule-cli/sliderule-cli ~/bin/sr
 
 - [Install git](https://git-scm.com/download/mac)
 - [Install npm](https://www.npmjs.com/package/npm#apple-macintosh-computers)
-- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181102.zip) of sliderule-cli.
+- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181115.zip) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/Applications`).
 - Run the command with the full path (i.e. `~/Applications/sliderule-cli/sliderule-cli`).
 
@@ -75,11 +75,12 @@ Everything in Sliderule is a component, even the top level "project" component t
 - `sliderule-cli add [url]` - Downloads a remote component and installs it in the current project. Unless a user is an owner or maintainer of the remote component's repository, remote components are read-only. If using a git host such as GitHub, the https URL must be used, instead of the SSH link. The URL provided can be from any supported repository type, such as git on GitHub: https://github.com/m30-jrs/blink_firmware.git
 - `sliderule-cli remove [-y] [name]` - Removes the named component from a project. The name can refer to either a local or remote component. The the `y` option is included, the user is not prompted before the component is removed.
 - `sliderule-cli refactor [name]` - Changes a local component to a remote component. This command will ask for a URL for the component to be pushed to. The specified URL must exist prior to running this command. The remote repository for the component is not created automatically at this time. Use the SSH link to the repository if hosted on GitHub, GitLab, Git* instead of the https link, and make sure to have your ssh keys set up correctly for your operating system.
-- `sliderule-cli change_licenses [name] [-s SOURCE_LICENSE] [-d DOCUMENTATION_LICENSE]` - Changes the licenses of the current component.
+- `sliderule-cli licenses change [-s SOURCE_LICENSE] [-d DOCUMENTATION_LICENSE]` - Changes the source and/or documentation licenses of the current component.
+- `sliderule-cli licenses list` - Lists all of the licenses that are active for the current component.
 
 ## Compiling It Yourself
 
-[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
+[sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program. Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ### Linux
@@ -92,7 +93,7 @@ Once the build has completed successfully, the sliderule-cli binary (sliderule-c
 
 At this time, tests will only run in Linux and MacOS.
 
-[sliderule_impl](https://github.com/7BIndustries/sliderule_impl) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
+[sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
