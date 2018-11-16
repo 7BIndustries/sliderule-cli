@@ -249,21 +249,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "sliderule-cli"
-version = "0.1.0"
-dependencies = [
- "argparse 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "os_info 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sliderule_impl 0.1.0",
-]
-
-[[package]]
-name = "sliderule_impl"
+name = "sliderule"
 version = "0.1.0"
 dependencies = [
  "liquid 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "os_info 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "sliderule-cli"
+version = "0.1.0"
+dependencies = [
+ "argparse 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "os_info 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sliderule 0.1.0",
 ]
 
 [[package]]

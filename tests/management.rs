@@ -161,7 +161,7 @@ mod management {
         file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
         file_contains_content(&bom_file, 12, "-component_1");
         file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "\"license\": \"NotASourceLicense AND NotADocLicense\",");
+        file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
         file_contains_content(&readme_file, 0, "# test_top");
         file_contains_content(&readme_file, 1, "New Sliderule component.");
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
@@ -447,7 +447,7 @@ mod management {
 
         assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
 
-        file_contains_content(&package_file, 4, "\"license\": \"NotASourceLicense AND NotADocLicense\",");
+        file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
         file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
 
@@ -461,16 +461,16 @@ mod management {
 
         // Change the license and verify
         Command::new(orig_path)
-            .args(&["licenses", "change", "-s", "Unlicense", "-d", "CC-BY-4.0"])
+            .args(&["licenses", "change", "-s", "Unlicense", "-d", "CC0-1.0"])
             .output()
             .expect("failed to execute process");
 
         let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
         let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
 
-        file_contains_content(&package_file, 4, "\"license\": \"Unlicense AND CC-BY-4.0\",");
+        file_contains_content(&package_file, 4, "\"license\": \"(Unlicense AND CC0-1.0)\",");
         file_contains_content(&dot_file, 0, "source_license: Unlicense,");
-        file_contains_content(&dot_file, 1, "documentation_license: CC-BY-4.0");
+        file_contains_content(&dot_file, 1, "documentation_license: CC0-1.0");
 
         // Set things back the way they were
         match env::set_current_dir(orig_dir) {

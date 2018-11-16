@@ -1,9 +1,8 @@
 extern crate argparse;
-extern crate sliderule_impl;
+extern crate sliderule;
 
 use std::io;
 use argparse::{ArgumentParser, Store, StoreTrue, List};
-use sliderule_impl::sliderule;
 
 fn main() {
     // What main command the user is wanting to use
