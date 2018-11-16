@@ -77,7 +77,7 @@ fn main() {
         }
     }
     else if command == "upload" {
-        sliderule::upload_project();
+        sliderule::upload_component();
     }
     else if command == "remove" {
         let name = &args[0];
