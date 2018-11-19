@@ -12,14 +12,25 @@ fn main() {
     let mut docs_license = String::new();
     let mut yes_mode_active = false;
 
+    // Some items for the command line help interface
+    let app_description = "Tool to manage Sliderule projects.";
+    let cmd_description = "Sliderule command to run: [create | download | upload | add | remove | refactor | licenses ]";
+    let args_description = "Arguments to Sliderule commands:
+                            create [name],
+                            download [all | dependencies | component_url],
+                            add [remote_component_url],
+                            remove [name],
+                            refactor [name],
+                            licenses [change | list]";
+
     // Parse the command line arguments
     {
         let mut ap = ArgumentParser::new();
-        ap.set_description("Tool to manage Sliderule projects.");
+        ap.set_description(app_description);
         ap.refer(&mut command)
-            .add_argument("command", Store, "Sliderule command to run");
+            .add_argument("command", Store, cmd_description);
         ap.refer(&mut args)
-            .add_argument("arguments", List, r#"Arguments for command"#);
+            .add_argument("arguments", List, args_description);
         ap.refer(&mut src_license)
             .add_option(&["-s"], Store, "Specify a source license on the command line.");
         ap.refer(&mut docs_license)
