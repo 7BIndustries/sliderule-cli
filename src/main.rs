@@ -91,6 +91,14 @@ fn main() {
         }
     }
     else if command == "upload" {
+        if upload_message.is_empty() {
+            // Get the upload message from the user to mark these changes with
+            println!("Message to attach to these project changes:");
+
+            io::stdin().read_line(&mut upload_message)
+                .expect("ERROR: Failed to read upload message line from user");
+        }
+
         sliderule::upload_component(upload_message);
     }
     else if command == "remove" {
