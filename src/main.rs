@@ -3,6 +3,7 @@ extern crate sliderule;
 
 use std::io;
 use argparse::{ArgumentParser, Store, StoreTrue, List};
+use std::path::Path;
 
 fn main() {
     // What main command the user is wanting to use
@@ -10,7 +11,8 @@ fn main() {
     let mut args: Vec<String> = Vec::new();
     let mut src_license = String::new();
     let mut docs_license = String::new();
-    let mut upload_message = String::new();
+    let mut message = String::new();
+    let mut url = String::new();
     let mut yes_mode_active = false;
 
     // Some items for the command line help interface
@@ -36,8 +38,10 @@ fn main() {
             .add_option(&["-s"], Store, "Specify a source license on the command line.");
         ap.refer(&mut docs_license)
             .add_option(&["-d"], Store, "Specify a documentation license on the command line.");
-        ap.refer(&mut upload_message)
+        ap.refer(&mut message)
             .add_option(&["-m"], Store, "Specifies the message to attach to changes on an upload.");
+        ap.refer(&mut url)
+            .add_option(&["-u"], Store, "The URL to use when uploading, downloading or adding a component.");
         ap.refer(&mut yes_mode_active)
             .add_option(&["-y"], StoreTrue, "Answers yes to any questions for unattended operation.");
         ap.parse_args_or_exit();
@@ -91,15 +95,27 @@ fn main() {
         }
     }
     else if command == "upload" {
-        if upload_message.is_empty() {
+        if message.is_empty() {
             // Get the upload message from the user to mark these changes with
             println!("Message to attach to these project changes:");
 
-            io::stdin().read_line(&mut upload_message)
+            io::stdin().read_line(&mut message)
                 .expect("ERROR: Failed to read upload message line from user");
+
+            message = message.trim().to_string();
         }
 
-        sliderule::upload_component(upload_message);
+        // Make sure this project has already been initialized as a repository
+        if !Path::new(".git").exists() && url.is_empty() {
+            println!("This project has not been initialized with a repository yet. Enter a URL of an existing repository to upload this component to:");
+
+            io::stdin().read_line(&mut url)
+                .expect("ERROR: Failed to read name or URL from user.");
+
+            url = url.trim().to_string();
+        }
+
+        sliderule::upload_component(message, url);
     }
     else if command == "remove" {
         let name = &args[0];
@@ -128,8 +144,17 @@ fn main() {
     else if command == "refactor" {
         let name = &args[0];
 
+        if url.is_empty() {
+            println!("Please enter the URL of an existing repository to upload the component to:");
+
+            io::stdin().read_line(&mut url)
+                .expect("ERROR: Failed to read name or URL from user.");
+
+            url = url.trim().to_string();
+        }
+
         // Convert the local component into a remote component
-        sliderule::refactor(name);
+        sliderule::refactor(name.to_string(), url);
     }
     else if command == "licenses" {
         let subcommand = &args[0];
