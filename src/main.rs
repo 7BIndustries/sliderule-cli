@@ -10,6 +10,7 @@ fn main() {
     let mut args: Vec<String> = Vec::new();
     let mut src_license = String::new();
     let mut docs_license = String::new();
+    let mut upload_message = String::new();
     let mut yes_mode_active = false;
 
     // Some items for the command line help interface
@@ -35,6 +36,8 @@ fn main() {
             .add_option(&["-s"], Store, "Specify a source license on the command line.");
         ap.refer(&mut docs_license)
             .add_option(&["-d"], Store, "Specify a documentation license on the command line.");
+        ap.refer(&mut upload_message)
+            .add_option(&["-m"], Store, "Specifies the message to attach to changes on an upload.");
         ap.refer(&mut yes_mode_active)
             .add_option(&["-y"], StoreTrue, "Answers yes to any questions for unattended operation.");
         ap.parse_args_or_exit();
@@ -88,7 +91,7 @@ fn main() {
         }
     }
     else if command == "upload" {
-        sliderule::upload_component();
+        sliderule::upload_component(upload_message);
     }
     else if command == "remove" {
         let name = &args[0];
