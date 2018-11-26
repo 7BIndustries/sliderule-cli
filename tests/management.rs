@@ -20,6 +20,7 @@ mod management {
     struct TestLocalRemove;
     struct TestChangeLicense;
     struct TestListLicenses;
+    struct TestUpload;
 
     impl Drop for Noisy {
         fn drop(&mut self) {
@@ -77,6 +78,23 @@ mod management {
             if Path::new("/tmp").join("test_list_licenses").exists() {
                 fs::remove_dir_all(Path::new("/tmp").join("test_list_licenses"))
                     .expect("ERROR: not able to delete top level component directory.");
+            }
+        }
+    }
+
+    impl Drop for TestUpload {
+        fn drop(&mut self) {
+            let demo_dir = Path::new("/tmp").join("demo");
+            let working_dir = Path::new("/tmp").join("topcomp");
+
+            // Clean up after ourselves
+            if demo_dir.exists() {
+                fs::remove_dir_all(demo_dir)
+                    .expect("ERROR not able to delete demo directory.");
+            }
+            if working_dir.exists() {
+                fs::remove_dir_all(working_dir)
+                    .expect("ERROR: not able to delete working directory.");
             }
         }
     }
@@ -544,6 +562,130 @@ mod management {
                 return;
             }
         };
+    }
+
+    #[test]
+    fn test_upload() {
+        let _my_setup = TestUpload;
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let demo_dir = Path::new("/tmp").join("demo");
+        let working_dir = Path::new("/tmp").join("topcomp");
+
+        // The test framework doesn't support Windows at this time
+        let info = os_info::get();
+        if info.os_type() == os_info::Type::Windows {
+            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
+            return;
+        }
+
+        // Check to make sure any previous runs got cleaned up
+        if demo_dir.exists() {
+            eprintln!("ERROR: Please delete {} and rerun tests.", demo_dir.display());
+        }
+        if working_dir.exists() {
+            eprintln!("ERROR: please delete {} and rerun tests.", working_dir.display());
+        }
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Create the demo directory
+        Command::new("mkdir")
+            .args(&["demo"])
+            .output()
+            .expect("Failed to create demo directory.");
+
+        // Change into the demo directory and create a bare git repo
+        match env::set_current_dir(Path::new("/tmp").join("demo")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+        Command::new("git")
+            .args(&["init", "--bare"])
+            .output()
+            .expect("failed to initialize bare git repository in demo directory");
+
+        // Create the remote directory for the topcomp project
+        Command::new("mkdir")
+            .args(&["topcomp"])
+            .output()
+            .expect("Failed to create demo directory.");
+
+        // Change into the topcomp directory and create a bare git repo
+        match env::set_current_dir(Path::new("/tmp").join("demo").join("topcomp")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+        Command::new("git")
+            .args(&["init", "--bare"])
+            .output()
+            .expect("failed to initialize bare git repository in demo directory");
+
+        // Go back to the demo directory
+        match env::set_current_dir(Path::new("/tmp").join("demo")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+
+        // Start a new git deamon server in the current remote repository
+        let mut git_cmd = Command::new("git")
+            .args(&["daemon", "--reuseaddr", "--export-all", "--base-path=.", "--verbose", "--enable=receive-pack", "."])
+            .spawn()
+            .expect("failed to start git daemon");
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Verify that the directory was created
+        let output = Command::new(&orig_path)
+            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "topcomp"])
+            .output()
+            .expect("failed to execute process");
+
+        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir(Path::new("/tmp").join("topcomp")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Upload the component to our local server
+        let output = Command::new(&orig_path)
+            .args(&["upload", "-m", "Initial commit", "-u", "git://127.0.0.1/topcomp"])
+            .output()
+            .expect("failed to upload component using sliderule-cli");
+
+        // Get rid of the git daemon
+        git_cmd.kill().expect("command wasn't running");
+
+        assert!(&output.stderr.is_empty());
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."));
     }
 
     /*
