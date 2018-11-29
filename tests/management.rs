@@ -108,7 +108,7 @@ mod management {
             .output()
             .expect("failed to execute process");
     
-        assert_eq!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."), true);
+        assert!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."));
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod management {
             }
         };
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
 
         // Verify that the proper directories and files within the top level component were created
         assert_eq!(Path::new("/tmp").join("test_top").join("bom_data.yaml").exists(), true);
@@ -318,7 +318,7 @@ mod management {
             }
         };
 
-        assert_eq!(String::from_utf8_lossy(&add_output.stdout).split("\n").collect::<Vec<&str>>()[1] , "Component installed from remote repository.");
+        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."));
         assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), true);
 
         // The remove command
@@ -327,7 +327,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(String::from_utf8_lossy(&remove_output.stdout).split("\n").collect::<Vec<&str>>()[2] , "Component uninstalled using npm.");
+        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("Component uninstalled using npm."));
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), false);
@@ -403,7 +403,7 @@ mod management {
             }
         };
 
-        assert_eq!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."), true);
+        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."));
         assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), true);
 
          // The remove command
@@ -419,7 +419,7 @@ mod management {
             panic!("ERROR: {}", String::from_utf8_lossy(&remove_output.stderr));
         }
 
-        assert_eq!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed") , true);
+        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed"));
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);
@@ -463,7 +463,7 @@ mod management {
         let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
         let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
 
         file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
@@ -535,7 +535,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
 
         match env::set_current_dir(Path::new("/tmp").join("test_list_licenses")) {
             Ok(dir) => dir,
@@ -551,7 +551,6 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        // println!("{:?}", output.stderr);
         assert_eq!(String::from_utf8_lossy(&output.stdout), "Licenses Specified In This Component:\nPath: /tmp/test_list_licenses, Source License: NotASourceLicense, Documentation License: NotADocLicense\n");
 
         // Set things back the way they were
@@ -645,9 +644,11 @@ mod management {
 
         // Start a new git deamon server in the current remote repository
         let mut git_cmd = Command::new("git")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .args(&["daemon", "--reuseaddr", "--export-all", "--base-path=.", "--verbose", "--enable=receive-pack", "."])
             .spawn()
-            .expect("failed to start git daemon");
+            .expect("ERROR: Could not launch git daemon.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         match env::set_current_dir("/tmp") {
@@ -664,7 +665,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), true);
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         match env::set_current_dir(Path::new("/tmp").join("topcomp")) {
@@ -681,11 +682,11 @@ mod management {
             .output()
             .expect("failed to upload component using sliderule-cli");
 
-        // Get rid of the git daemon
-        git_cmd.kill().expect("command wasn't running");
+        git_cmd.kill().expect("ERROR: git daemon wasn't running");
 
         assert!(&output.stderr.is_empty());
         assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."));
+        assert!(!String::from_utf8_lossy(&output.stdout).contains("fatal: unable to connect to 127.0.0.1"));
     }
 
     /*

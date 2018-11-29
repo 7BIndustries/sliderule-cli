@@ -11,3 +11,5 @@ TEMPLATE_DIR="$(dirname "$(pwd)")/sliderule-rs"
 # Run cargo with the command that was passed in by the user
 cargo "$@"
 
+# Rust seems to have a hard time killing this daemon
+pkill -f "git-daemon"
