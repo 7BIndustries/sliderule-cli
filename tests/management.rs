@@ -21,6 +21,7 @@ mod management {
     struct TestChangeLicense;
     struct TestListLicenses;
     struct TestUpload;
+    struct TestRefactor;
 
     impl Drop for Noisy {
         fn drop(&mut self) {
@@ -99,6 +100,23 @@ mod management {
         }
     }
 
+    impl Drop for TestRefactor {
+        fn drop(&mut self) {
+            let demo_dir = Path::new("/tmp").join("demo");
+            let remote_dir = Path::new("/tmp").join("remote");
+
+            // Clean up after ourselves
+            if demo_dir.exists() {
+                fs::remove_dir_all(demo_dir)
+                    .expect("ERROR not able to delete demo directory.");
+            }
+            if remote_dir.exists() {
+                fs::remove_dir_all(remote_dir)
+                    .expect("ERROR: not able to delete remote directory.");
+            }
+        }
+    }
+
     #[test]
     /*
      * Makes sure the user will get the correct response if they run the CLI without any commands
@@ -151,7 +169,7 @@ mod management {
             .expect("failed to execute process");
 
         // Set things back the way they were
-        match env::set_current_dir(orig_dir) {
+        match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
                 eprintln!("ERROR: Could not change into tmp directory: {}", e);
@@ -162,13 +180,13 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
 
         // Verify that the proper directories and files within the top level component were created
-        assert_eq!(Path::new("/tmp").join("test_top").join("bom_data.yaml").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("components").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("dist").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("docs").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("package.json").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("README.md").exists(), true);
-        assert_eq!(Path::new("/tmp").join("test_top").join("source").exists(), true);
+        assert!(Path::new("/tmp").join("test_top").join("bom_data.yaml").exists());
+        assert!(Path::new("/tmp").join("test_top").join("components").exists());
+        assert!(Path::new("/tmp").join("test_top").join("dist").exists());
+        assert!(Path::new("/tmp").join("test_top").join("docs").exists());
+        assert!(Path::new("/tmp").join("test_top").join("package.json").exists());
+        assert!(Path::new("/tmp").join("test_top").join("README.md").exists());
+        assert!(Path::new("/tmp").join("test_top").join("source").exists());
 
         let bom_file = Path::new("/tmp").join("test_top").join("bom_data.yaml");
         let package_file = Path::new("/tmp").join("test_top").join("package.json");
@@ -184,6 +202,15 @@ mod management {
         file_contains_content(&readme_file, 1, "New Sliderule component.");
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
         file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
     }
 
     #[test]
@@ -225,7 +252,7 @@ mod management {
             .expect("failed to execute process");
 
         // Set things back the way they were
-        match env::set_current_dir(orig_dir) {
+        match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
                 eprintln!("ERROR: Could not change into tmp directory: {}", e);
@@ -236,13 +263,13 @@ mod management {
         assert_eq!(String::from_utf8_lossy(&output.stdout), "Successfully cloned component repository.\n");
 
         // Verify that the proper directories and files within the top level compoent were created
-        assert_eq!(Path::new("/tmp").join("blink").join("bom_data.yaml").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("components").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("dist").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("docs").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("package.json").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("README.md").exists(), true);
-        assert_eq!(Path::new("/tmp").join("blink").join("source").exists(), true);
+        assert!(Path::new("/tmp").join("blink").join("bom_data.yaml").exists());
+        assert!(Path::new("/tmp").join("blink").join("components").exists());
+        assert!(Path::new("/tmp").join("blink").join("dist").exists());
+        assert!(Path::new("/tmp").join("blink").join("docs").exists());
+        assert!(Path::new("/tmp").join("blink").join("package.json").exists());
+        assert!(Path::new("/tmp").join("blink").join("README.md").exists());
+        assert!(Path::new("/tmp").join("blink").join("source").exists());
 
         let bom_file = Path::new("/tmp").join("blink").join("bom_data.yaml");
         let package_file = Path::new("/tmp").join("blink").join("package.json");
@@ -255,6 +282,15 @@ mod management {
         file_contains_content(&package_file, 4, "\"dependencies\": {");
         file_contains_content(&readme_file, 0, "# blink_firmware");
         file_contains_content(&readme_file, 1, "The Arduino Blink demo as a DOF component");
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
     }
 
     #[test]
@@ -310,7 +346,7 @@ mod management {
             .expect("failed to execute process");
 
         // Set things back the way they were
-        match env::set_current_dir(orig_dir) {
+        match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
                 eprintln!("ERROR: Could not change into tmp directory: {}", e);
@@ -319,7 +355,7 @@ mod management {
         };
 
         assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."));
-        assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), true);
+        assert!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists());
 
         // The remove command
         let remove_output = Command::new(&orig_path)
@@ -328,6 +364,15 @@ mod management {
             .expect("failed to execute process");
 
         assert!(String::from_utf8_lossy(&remove_output.stdout).contains("Component uninstalled using npm."));
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), false);
@@ -395,7 +440,7 @@ mod management {
         }
 
         // Set things back the way they were
-        match env::set_current_dir(orig_dir) {
+        match env::set_current_dir(&orig_dir) {
             Ok(dir) => dir,
             Err(e) => {
                 eprintln!("ERROR: Could not change into tmp directory: {}", e);
@@ -404,7 +449,7 @@ mod management {
         };
 
         assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."));
-        assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), true);
+        assert!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists());
 
          // The remove command
         let remove_output = match Command::new(&orig_path)
@@ -420,6 +465,15 @@ mod management {
         }
 
         assert!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed"));
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);
@@ -564,6 +618,9 @@ mod management {
     }
 
     #[test]
+    /*
+     * Tests pushing component changes to a remote repository.
+     */
     fn test_upload() {
         let _my_setup = TestUpload;
         let orig_dir = env::current_dir().unwrap();
@@ -596,9 +653,7 @@ mod management {
         };
 
         // Create the demo directory
-        Command::new("mkdir")
-            .args(&["demo"])
-            .output()
+        fs::create_dir("demo")
             .expect("Failed to create demo directory.");
 
         // Change into the demo directory and create a bare git repo
@@ -615,10 +670,8 @@ mod management {
             .expect("failed to initialize bare git repository in demo directory");
 
         // Create the remote directory for the topcomp project
-        Command::new("mkdir")
-            .args(&["topcomp"])
-            .output()
-            .expect("Failed to create demo directory.");
+        fs::create_dir("topcomp")
+            .expect("Failed to create top component directory.");
 
         // Change into the topcomp directory and create a bare git repo
         match env::set_current_dir(Path::new("/tmp").join("demo").join("topcomp")) {
@@ -687,6 +740,103 @@ mod management {
         assert!(&output.stderr.is_empty());
         assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."));
         assert!(!String::from_utf8_lossy(&output.stdout).contains("fatal: unable to connect to 127.0.0.1"));
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
+    }
+
+    #[test]
+    fn test_refactor() {
+        let _my_setup = TestUpload;
+        let orig_dir = env::current_dir().unwrap();
+        let orig_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+
+        let demo_dir = Path::new("/tmp").join("demo");
+        let remote_dir = Path::new("/tmp").join("remote");
+
+        // The test framework doesn't support Windows at this time
+        let info = os_info::get();
+        if info.os_type() == os_info::Type::Windows {
+            eprintln!("ERROR: This testing framework only supports Linux and MacOS at this time.");
+            return;
+        }
+
+        // Check to make sure any previous runs got cleaned up
+        if demo_dir.exists() {
+            eprintln!("ERROR: Please delete {} and rerun tests.", demo_dir.display());
+        }
+        if remote_dir.exists() {
+            eprintln!("ERROR: please delete {} and rerun tests.", remote_dir.display());
+        }
+
+        // We can put the test directories in tmp without breaking anything or running into permission issues
+        match env::set_current_dir("/tmp") {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into tmp directory: {}", e);
+                return;
+            }
+        };
+
+        // Create the demo directory
+        fs::create_dir("demo")
+            .expect("Failed to create demo directory.");
+
+        // Change into the demo directory and create a bare git repo
+        match env::set_current_dir(Path::new("/tmp").join("demo")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+        Command::new("git")
+            .args(&["init", "--bare"])
+            .output()
+            .expect("failed to initialize bare git repository in demo directory");
+
+        // Create the remote component directory
+        fs::create_dir("remote")
+            .expect("Failed to create remote component directory.");
+
+        // Change into the topcomp directory and create a bare git repo
+        match env::set_current_dir(Path::new("/tmp").join("demo").join("remote")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+        Command::new("git")
+            .args(&["init", "--bare"])
+            .output()
+            .expect("failed to initialize bare git repository in demo directory");
+
+        // Go back to the demo directory
+        match env::set_current_dir(Path::new("/tmp").join("demo")) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into demo directory: {}", e);
+                return;
+            }
+        };
+
+        // TODO: Do the git daemon call here
+
+        // Set things back the way they were
+        match env::set_current_dir(orig_dir) {
+            Ok(dir) => dir,
+            Err(e) => {
+                eprintln!("ERROR: Could not change into original directory: {}", e);
+                return;
+            }
+        };
     }
 
     /*
