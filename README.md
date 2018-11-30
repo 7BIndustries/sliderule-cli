@@ -12,7 +12,7 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 ### Windows
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
-- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181115.zip) of sliderule-cli.
+- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181130.zip) of sliderule-cli.
 - Extract the archive to a convenient location (i.e. `C:\Users\[you]\`).
 - Run the command with the full path (i.e. `C:\Users\[you]\sliderule-cli\sliderule-cli.exe`).
 
