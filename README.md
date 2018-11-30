@@ -97,6 +97,6 @@ At this time, tests will only run in Linux and MacOS.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
-./make.sh test
+./make.sh test -- --test-threads=1
 ```
-At this time the tests are only designed to run on Linux and MacOS.
+The `test-threads` option is very important. If the tests are run in parallel (the default for cargo), they will fail randomly because they are interferring with each other. At this time the tests are only designed to run on Linux and MacOS.
