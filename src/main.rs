@@ -51,15 +51,18 @@ fn main() {
     if command == "create" {
         let name = &args[0];
 
-        // Find out what licenses the user wants to use
-        let licenses = ask_for_licenses(false);
+        // Only ask for licenses if they are not specified on the command line
+        if src_license.is_empty() || docs_license.is_empty() {
+            // Find out what licenses the user wants to use
+            let licenses = ask_for_licenses(false);
 
-        // Handle the occurrence of someone specifying licenses on the command line
-        if src_license.is_empty() {
-            src_license = licenses.0;
-        }
-        if docs_license.is_empty() {
-            docs_license = licenses.1;
+            // Handle the occurrence of someone specifying licenses on the command line
+            if src_license.is_empty() {
+                src_license = licenses.0;
+            }
+            if docs_license.is_empty() {
+                docs_license = licenses.1;
+            }
         }
 
         sliderule::create_component(&name, &src_license, &docs_license);
