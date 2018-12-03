@@ -1,7 +1,7 @@
 # sliderule-cli
 
 ## Introduction
-This is a command line implementation of the open hardware (OSHW) [sliderule methodology](https://github.com/Mach30/sliderule) being developed by [Mach 30](http://mach30.org/).
+This is a command line implementation of the distributed open source hardware (OSHW) [DOF methodology](https://github.com/Mach30/dof) being developed by [Mach 30](http://mach30.org/).
 
 ***NOTE*** This is in the very early stages of development, and is not ready for widespread use.
 
@@ -53,7 +53,7 @@ $ ln -s ~/Applications/sliderule-cli/sliderule-cli ~/bin/sr
 
 ### Creating and Managing a Sliderule Component
 
-Everything in Sliderule is a component, even the top level "project" component that holds all other components. In this way, your top level project can be used as component of another project later on. The workflow for creating, initializing and populating a new project is as follows.
+Everything in Sliderule is a component, even the top level "project" component that holds all other components. In this way, your top level project can be used as a component of another project later on. The workflow for creating, initializing and populating a new project is as follows.
 
 1. Run `sliderule-cli create [name]` in a directory that you have access to, and that is not already a component directory.
 2. Change (`cd`) into the newly created component directory, with the name provided as the `name` argument from step 1.
@@ -82,18 +82,28 @@ Everything in Sliderule is a component, even the top level "project" component t
 
 [sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
-If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, running the following should build the program. Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
-### Linux
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, follow the instructions for your platform below to build the program.
+### Linux & MacOS
+Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ```
 ./make.sh build [--release]
 ```
-Once the build has completed successfully, the sliderule-cli binary (sliderule-cli.exe on Windows) should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
+Once the build has completed successfully, the sliderule-cli binary should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
+
+### Windows
+Note that `make.cmd` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
+```
+./make.cmd build [--release]
+```
+Once the build has completed successfully, the sliderule-cli.exe binary should be located in `.\sliderule-cli\target\debug\`. Supply the full path to the sliderule-cli.exe binary to use it. Alternatively, add the path to sliderule-cli.exe to the `PATH` environment variable.
 
 ## Running Tests
 
 At this time, tests will only run in Linux and MacOS.
 
-[sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
+[sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before these steps are followed.
+
+### Linux & MacOS
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
