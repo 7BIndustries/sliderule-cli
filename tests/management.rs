@@ -134,7 +134,7 @@ mod management {
             .output()
             .expect("failed to execute process");
     
-        assert!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."));
+        assert!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."), "Running sliderule-cli without any commands or options did not throw an error.");
     }
 
     #[test]
@@ -168,31 +168,10 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "The test_top component was not created correctly.");
 
         // Verify that the proper directories and files within the top level component were created
-        assert!(Path::new("/tmp").join("test_top").join("bom_data.yaml").exists());
-        assert!(Path::new("/tmp").join("test_top").join("components").exists());
-        assert!(Path::new("/tmp").join("test_top").join("dist").exists());
-        assert!(Path::new("/tmp").join("test_top").join("docs").exists());
-        assert!(Path::new("/tmp").join("test_top").join("package.json").exists());
-        assert!(Path::new("/tmp").join("test_top").join("README.md").exists());
-        assert!(Path::new("/tmp").join("test_top").join("source").exists());
-
-        let bom_file = Path::new("/tmp").join("test_top").join("bom_data.yaml");
-        let package_file = Path::new("/tmp").join("test_top").join("package.json");
-        let readme_file = Path::new("/tmp").join("test_top").join("README.md");
-        let dot_file = Path::new("/tmp").join("test_top").join(".sr");
-
-        // Check the content of the files and directories as appropriate here
-        file_contains_content(&bom_file, 0, "# Bill of Materials Data for test_top");
-        file_contains_content(&bom_file, 12, "-component_1");
-        file_contains_content(&package_file, 1, "\"name\": \"test_top\",");
-        file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
-        file_contains_content(&readme_file, 0, "# test_top");
-        file_contains_content(&readme_file, 1, "New Sliderule component.");
-        file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
-        file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
+        is_valid_component(&Path::new("/tmp").join("test_top"), "test_top", "NotASourceLicense", "NotADocLicense");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -215,8 +194,8 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("blink").exists() {
-            panic!("ERROR: Please delete /tmp/blink before running these tests.");
+        if Path::new("/tmp").join("blink_firmware").exists() {
+            panic!("ERROR: Please delete /tmp/blink_firmware before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
@@ -225,32 +204,13 @@ mod management {
 
         // Try to download the component
         let output = Command::new(cmd_path)
-            .args(&["download", "https://github.com/m30-jrs/blink.git"])
+            .args(&["download", "https://github.com/jmwright/blink_firmware.git"])
             .output()
             .expect("failed to execute process");
 
         assert_eq!(String::from_utf8_lossy(&output.stdout), "Successfully cloned component repository.\n");
 
-        // Verify that the proper directories and files within the top level compoent were created
-        assert!(Path::new("/tmp").join("blink").join("bom_data.yaml").exists());
-        assert!(Path::new("/tmp").join("blink").join("components").exists());
-        assert!(Path::new("/tmp").join("blink").join("dist").exists());
-        assert!(Path::new("/tmp").join("blink").join("docs").exists());
-        assert!(Path::new("/tmp").join("blink").join("package.json").exists());
-        assert!(Path::new("/tmp").join("blink").join("README.md").exists());
-        assert!(Path::new("/tmp").join("blink").join("source").exists());
-
-        let bom_file = Path::new("/tmp").join("blink").join("bom_data.yaml");
-        let package_file = Path::new("/tmp").join("blink").join("package.json");
-        let readme_file = Path::new("/tmp").join("blink").join("README.md");
-
-        // Check the content of the files and directories as appropriate here
-        file_contains_content(&bom_file, 0, "# Bill of Materials Data for blink");
-        file_contains_content(&bom_file, 12, "options:");
-        file_contains_content(&package_file, 1, "\"name\": \"blink\",");
-        file_contains_content(&package_file, 4, "\"dependencies\": {");
-        file_contains_content(&readme_file, 0, "# blink_firmware");
-        file_contains_content(&readme_file, 1, "The Arduino Blink demo as a DOF component");
+        is_valid_component(&Path::new("/tmp").join("blink_firmware"), "blink_firmware", "Unlicense", "CC0-1.0");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -296,8 +256,8 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."));
-        assert!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists());
+        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."), "Component blink_firmware was not installed from remote repository.");
+        assert!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), "blink_firmware directory does not exist.");
 
         // The remove command
         let remove_output = Command::new(&cmd_path)
@@ -305,7 +265,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("Component uninstalled using npm."));
+        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("Component uninstalled using npm."), "blink_firmware was not successfully uninstalled using npm.");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -368,8 +328,8 @@ mod management {
             panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
         }
 
-        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."));
-        assert!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists());
+        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."), "local_test component not set up successfully.");
+        assert!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), "local_test component directory does not exist.");
 
          // The remove command
         let remove_output = match Command::new(&cmd_path)
@@ -384,7 +344,7 @@ mod management {
             panic!("ERROR: {}", String::from_utf8_lossy(&remove_output.stderr));
         }
 
-        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed"));
+        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed"), "local_test component not removed successfully.");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -424,7 +384,7 @@ mod management {
         let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
         let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_top_license not created successfully.");
 
         file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
@@ -478,7 +438,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_list_licenses component not successfully set up.");
 
         env::set_current_dir(Path::new("/tmp").join("test_list_licenses"))
             .expect("ERROR: Could not change into /tmp/test_list_licenses directory.");
@@ -573,7 +533,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "topcomp component not set up successfully.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         env::set_current_dir(Path::new("/tmp").join("topcomp"))
@@ -591,9 +551,9 @@ mod management {
         env::set_current_dir(orig_dir)
             .expect("ERROR: Could not change into original directory.");
 
-        assert!(&output.stderr.is_empty());
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."));
-        assert!(!String::from_utf8_lossy(&output.stdout).contains("fatal: unable to connect to 127.0.0.1"));
+        assert!(&output.stderr.is_empty(), "upload command stderr is not empty.");
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."), "topcomp component not uploaded successfully.");
+        assert!(!String::from_utf8_lossy(&output.stdout).contains("fatal: unable to connect to 127.0.0.1"), "sliderule-cli not able to connect to local instance of git daemon.");
     }
 
     #[test]
@@ -671,7 +631,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "maincomp component not successfully created.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         env::set_current_dir(Path::new("/tmp").join("maincomp"))
@@ -683,7 +643,7 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "local component not successfully created.");
 
         // Attempt to refactor the component to the remote
         Command::new(&cmd_path)
@@ -695,8 +655,8 @@ mod management {
         env::set_current_dir(orig_dir)
             .expect("ERROR: Could not change into original directory.");
 
-        assert!(Path::new("/tmp").join("maincomp").exists());
-        assert!(Path::new("/tmp").join("refactor").join("remote").exists());
+        assert!(Path::new("/tmp").join("maincomp").exists(), "/tmp/maincomp directory does not exist.");
+        assert!(Path::new("/tmp").join("refactor").join("remote").exists(), "/tmp/refactor/remote directory does not exist.");
 
         git_cmd.kill().expect("ERROR: git daemon wasn't running");
     }
@@ -713,5 +673,33 @@ mod management {
         let contents: Vec<&str> = contents.split("\n").collect();
 
         assert_eq!(contents[line].trim(), text);
+    }
+
+    /*
+     * Tests if a directory has the correct contents to be a component.
+     */
+    fn is_valid_component(component_path: &Path, component_name: &str, source_license: &str, doc_license: &str) {
+        assert!(component_path.join("bom_data.yaml").exists(), "The file {}/bom_data.yaml does not exist.", component_path.display());
+        assert!(component_path.join("components").exists(), "The directory {}/components does not exist.", component_path.display());
+        // assert!(component_path.join("dist").exists(), "The directory {}/dist does not exist.",  component_path.display());
+        assert!(component_path.join("docs").exists(), "The directory {}/docs does not exist.",  component_path.display());
+        assert!(component_path.join("package.json").exists(), "The file {}/package.json does not exist.",  component_path.display());
+        assert!(component_path.join("README.md").exists(), "The file {}/README.md does not exist.",  component_path.display());
+        assert!(component_path.join("source").exists(), "The directory {}/source does not exist.",  component_path.display());
+
+        let bom_file = component_path.join("bom_data.yaml");
+        let package_file = component_path.join("package.json");
+        let readme_file = component_path.join("README.md");
+        let dot_file = component_path.join(".sr");
+
+        // Check the content of the files and directories as appropriate here
+        file_contains_content(&bom_file, 0, &format!("# Bill of Materials Data for {}", component_name));
+        file_contains_content(&bom_file, 12, "-component_1");
+        file_contains_content(&package_file, 1, &format!("\"name\": \"{}\",", component_name));
+        file_contains_content(&package_file, 4, &format!("\"license\": \"({} AND {})\",", source_license, doc_license));
+        file_contains_content(&readme_file, 0, &format!("# {}", component_name));
+        file_contains_content(&readme_file, 1, "New Sliderule component.");
+        file_contains_content(&dot_file, 0, &format!("source_license: {},", source_license));
+        file_contains_content(&dot_file, 1, &format!("documentation_license: {}", doc_license));
     }
 }
