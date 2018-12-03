@@ -36,8 +36,8 @@ mod management {
     impl Drop for Blink {
         fn drop(&mut self) {
             // Clean up after ourselves
-            if Path::new("/tmp").join("blink").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("blink"))
+            if Path::new("/tmp").join("blink_firmware").exists() {
+                fs::remove_dir_all(Path::new("/tmp").join("blink_firmware"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -453,7 +453,8 @@ mod management {
         env::set_current_dir(orig_dir)
             .expect("ERROR: Could not change into original directory.");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout), "Licenses Specified In This Component:\nPath: /tmp/test_list_licenses, Source License: NotASourceLicense, Documentation License: NotADocLicense\n");
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Licenses Specified In This Component:"), "License listing not found.");
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Source License: NotASourceLicense, Documentation License: NotADocLicense"), "The correct licenses (source: NotASourceLicense, doc: NotADocLicense) were not listed.");
     }
 
     #[test]
