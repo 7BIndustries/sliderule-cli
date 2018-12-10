@@ -25,9 +25,11 @@ mod management {
 
     impl Drop for Noisy {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("test_top").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("test_top"))
+            if temp_dir.join("test_top").exists() {
+                fs::remove_dir_all(temp_dir.join("test_top"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -35,9 +37,11 @@ mod management {
 
     impl Drop for Blink {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("blink_firmware").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("blink_firmware"))
+            if temp_dir.join("blink_firmware").exists() {
+                fs::remove_dir_all(temp_dir.join("blink_firmware"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -45,9 +49,11 @@ mod management {
 
     impl Drop for TestBlank {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("test_blank").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("test_blank"))
+            if temp_dir.join("test_blank").exists() {
+                fs::remove_dir_all(temp_dir.join("test_blank"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -55,9 +61,11 @@ mod management {
 
     impl Drop for TestLocalRemove {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("test_local_remove").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("test_local_remove"))
+            if temp_dir.join("test_local_remove").exists() {
+                fs::remove_dir_all(temp_dir.join("test_local_remove"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -65,9 +73,11 @@ mod management {
 
     impl Drop for TestChangeLicense {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("test_top_license").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("test_top_license"))
+            if temp_dir.join("test_top_license").exists() {
+                fs::remove_dir_all(temp_dir.join("test_top_license"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -75,9 +85,11 @@ mod management {
 
     impl Drop for TestListLicenses {
         fn drop(&mut self) {
+            let temp_dir = env::temp_dir();
+
             // Clean up after ourselves
-            if Path::new("/tmp").join("test_list_licenses").exists() {
-                fs::remove_dir_all(Path::new("/tmp").join("test_list_licenses"))
+            if temp_dir.join("test_list_licenses").exists() {
+                fs::remove_dir_all(temp_dir.join("test_list_licenses"))
                     .expect("ERROR: not able to delete top level component directory.");
             }
         }
@@ -85,8 +97,10 @@ mod management {
 
     impl Drop for TestUpload {
         fn drop(&mut self) {
-            let demo_dir = Path::new("/tmp").join("demo");
-            let working_dir = Path::new("/tmp").join("topcomp");
+            let temp_dir = env::temp_dir();
+
+            let demo_dir = temp_dir.join("demo");
+            let working_dir = temp_dir.join("topcomp");
 
             // Clean up after ourselves
             if demo_dir.exists() {
@@ -102,9 +116,11 @@ mod management {
 
     impl Drop for TestRefactor {
         fn drop(&mut self) {
-            let demo_dir = Path::new("/tmp").join("refactor");
-            let remote_dir = Path::new("/tmp").join("refactor").join("remote");
-            let working_dir = Path::new("/tmp").join("maincomp");
+            let temp_dir = env::temp_dir();
+
+            let demo_dir = temp_dir.join("refactor");
+            let remote_dir = temp_dir.join("refactor").join("remote");
+            let working_dir = temp_dir.join("maincomp");
 
             // Clean up after ourselves
             if demo_dir.exists() {
@@ -147,6 +163,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -154,13 +172,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("test_top").exists() {
-            panic!("ERROR: Please delete /tmp/test_top before running these tests.");
+        if temp_dir.join("test_top").exists() {
+            panic!("ERROR: Please delete the temporary test_top directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(cmd_path)
@@ -171,7 +189,7 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "The test_top component was not created correctly.");
 
         // Verify that the proper directories and files within the top level component were created
-        is_valid_component(&Path::new("/tmp").join("test_top"), "test_top", "NotASourceLicense", "NotADocLicense");
+        is_valid_component(&temp_dir.join("test_top"), "test_top", "NotASourceLicense", "NotADocLicense");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -187,6 +205,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -194,13 +214,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("blink_firmware").exists() {
-            panic!("ERROR: Please delete /tmp/blink_firmware before running these tests.");
+        if temp_dir.join("blink_firmware").exists() {
+            panic!("ERROR: Please delete the temporary blink_firmware directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into temporary directory.");
 
         // Try to download the component
         let output = Command::new(cmd_path)
@@ -210,7 +230,7 @@ mod management {
 
         assert_eq!(String::from_utf8_lossy(&output.stdout), "Successfully cloned component repository.\n");
 
-        is_valid_component(&Path::new("/tmp").join("blink_firmware"), "blink_firmware", "Unlicense", "CC0-1.0");
+        is_valid_component(&temp_dir.join("blink_firmware"), "blink_firmware", "Unlicense", "CC0-1.0");
 
         // Set things back the way they were
         env::set_current_dir(orig_dir)
@@ -226,6 +246,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -233,13 +255,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("test_blank").exists() {
-            panic!("ERROR: Please delete /tmp/test_top before running these tests.");
+        if temp_dir.join("test_blank").exists() {
+            panic!("ERROR: Please delete the temporary test_top directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("Could not change into temporary directory.");
 
         // Try to download the component
         Command::new(&cmd_path)
@@ -247,8 +269,8 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        env::set_current_dir(Path::new("/tmp").join("test_blank"))
-            .expect("Could not change into /tmp/test_blank directory.");
+        env::set_current_dir(temp_dir.join("test_blank"))
+            .expect("Could not change into the temporary test_blank directory.");
 
         // The add command
         let add_output = Command::new(&cmd_path)
@@ -257,7 +279,7 @@ mod management {
             .expect("failed to execute process");
 
         assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."), "Component blink_firmware was not installed from remote repository.");
-        assert!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), "blink_firmware directory does not exist.");
+        assert!(temp_dir.join("test_blank").join("node_modules").join("blink_firmware").exists(), "blink_firmware directory does not exist.");
 
         // The remove command
         let remove_output = Command::new(&cmd_path)
@@ -284,6 +306,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -291,13 +315,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("test_local_remove").exists() {
-            panic!("ERROR: Please delete /tmp/test_local_remove before running these tests.");
+        if temp_dir.join("test_local_remove").exists() {
+            panic!("ERROR: Please delete the temporary test_local_remove directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Create the parent component so that we can test sub-component removal
         let create_output = match Command::new(&cmd_path)
@@ -312,8 +336,8 @@ mod management {
             panic!("ERROR: {}", String::from_utf8_lossy(&create_output.stderr));
         }
 
-        env::set_current_dir(Path::new("/tmp").join("test_local_remove"))
-            .expect("ERROR: Could not change into /tmp/test_local_remove directory.");
+        env::set_current_dir(temp_dir.join("test_local_remove"))
+            .expect("ERROR: Could not change into the temporary test_local_remove directory.");
 
         // Create the local_test component
         let add_output = match Command::new(&cmd_path)
@@ -329,7 +353,7 @@ mod management {
         }
 
         assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."), "local_test component not set up successfully.");
-        assert!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), "local_test component directory does not exist.");
+        assert!(temp_dir.join("test_local_remove").join("components").join("local_test").exists(), "local_test component directory does not exist.");
 
          // The remove command
         let remove_output = match Command::new(&cmd_path)
@@ -360,6 +384,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -367,13 +393,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("test_top_license").exists() {
-            panic!("ERROR: Please delete /tmp/test_top_license before running these tests.");
+        if temp_dir.join("test_top_license").exists() {
+            panic!("ERROR: Please delete the temporary test_top_license directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
@@ -381,8 +407,8 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
-        let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
+        let package_file = temp_dir.join("test_top_license").join("package.json");
+        let dot_file = temp_dir.join("test_top_license").join(".sr");
 
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_top_license not created successfully.");
 
@@ -390,8 +416,8 @@ mod management {
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
         file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
 
-        env::set_current_dir(Path::new("/tmp").join("test_top_license"))
-            .expect("ERROR: Could not change into /tmp/test_top_license directory.");
+        env::set_current_dir(temp_dir.join("test_top_license"))
+            .expect("ERROR: Could not change into the temporary test_top_license directory.");
 
         // Change the license and verify
         Command::new(cmd_path)
@@ -399,8 +425,8 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        let package_file = Path::new("/tmp").join("test_top_license").join("package.json");
-        let dot_file = Path::new("/tmp").join("test_top_license").join(".sr");
+        let package_file = temp_dir.join("test_top_license").join("package.json");
+        let dot_file = temp_dir.join("test_top_license").join(".sr");
 
         file_contains_content(&package_file, 4, "\"license\": \"(Unlicense AND CC0-1.0)\",");
         file_contains_content(&dot_file, 0, "source_license: Unlicense,");
@@ -417,6 +443,8 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
+        let temp_dir = env::temp_dir();
+
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
         if info.os_type() == os_info::Type::Windows {
@@ -424,13 +452,13 @@ mod management {
         }
 
         // Check to see if the last test left things dirty
-        if Path::new("/tmp").join("test_list_licenses").exists() {
-            panic!("ERROR: Please delete /tmp/test_list_licenses before running these tests.");
+        if temp_dir.join("test_list_licenses").exists() {
+            panic!("ERROR: Please delete the temporary test_list_licenses directory before running these tests.");
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
@@ -440,8 +468,8 @@ mod management {
 
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_list_licenses component not successfully set up.");
 
-        env::set_current_dir(Path::new("/tmp").join("test_list_licenses"))
-            .expect("ERROR: Could not change into /tmp/test_list_licenses directory.");
+        env::set_current_dir(temp_dir.join("test_list_licenses"))
+            .expect("ERROR: Could not change into the temporary test_list_licenses directory.");
 
         // Change the license and verify
         let output = Command::new(&cmd_path)
@@ -465,8 +493,11 @@ mod management {
         let _my_setup = TestUpload;
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
-        let demo_dir = Path::new("/tmp").join("demo");
-        let working_dir = Path::new("/tmp").join("topcomp");
+
+        let temp_dir = env::temp_dir();
+
+        let demo_dir = temp_dir.join("demo");
+        let working_dir = temp_dir.join("topcomp");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -483,16 +514,16 @@ mod management {
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Create the demo directory
         fs::create_dir("demo")
             .expect("Failed to create demo directory.");
 
         // Change into the demo directory and create a bare git repo
-        env::set_current_dir(Path::new("/tmp").join("demo"))
-            .expect("ERROR: Could not change into /tmp/demo directory.");
+        env::set_current_dir(temp_dir.join("demo"))
+            .expect("ERROR: Could not change into the temporary demo directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
@@ -504,8 +535,8 @@ mod management {
             .expect("Failed to create top component directory.");
 
         // Change into the topcomp directory and create a bare git repo
-        env::set_current_dir(Path::new("/tmp").join("demo").join("topcomp"))
-            .expect("ERROR: Could not change into /tmp/demo/topcomp directory");
+        env::set_current_dir(temp_dir.join("demo").join("topcomp"))
+            .expect("ERROR: Could not change into the temporary demo/topcomp directory");
 
         Command::new("git")
             .args(&["init", "--bare"])
@@ -513,8 +544,8 @@ mod management {
             .expect("failed to initialize bare git repository in demo directory");
 
         // Go back to the demo directory
-        env::set_current_dir(Path::new("/tmp").join("demo"))
-            .expect("ERROR: Could not change into /tmp/demo directory.");
+        env::set_current_dir(temp_dir.join("demo"))
+            .expect("ERROR: Could not change into the temporary demo directory.");
 
         // Start a new git deamon server in the current remote repository
         let mut git_cmd = Command::new("git")
@@ -525,8 +556,8 @@ mod management {
             .expect("ERROR: Could not launch git daemon.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
@@ -537,8 +568,8 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "topcomp component not set up successfully.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(Path::new("/tmp").join("topcomp"))
-            .expect("ERROR: Could not change into /tmp/topcomp directory.");
+        env::set_current_dir(temp_dir.join("topcomp"))
+            .expect("ERROR: Could not change into the temporary topcomp directory.");
 
         // Upload the component to our local server
         let output = Command::new(&cmd_path)
@@ -563,8 +594,10 @@ mod management {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
-        let refactor_dir = Path::new("/tmp").join("refactor");
-        let remote_dir = Path::new("/tmp").join("refactor").join("remote");
+        let temp_dir = env::temp_dir();
+
+        let refactor_dir = temp_dir.join("refactor");
+        let remote_dir = temp_dir.join("refactor").join("remote");
 
         // The test framework doesn't support Windows at this time
         let info = os_info::get();
@@ -581,16 +614,16 @@ mod management {
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory.");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory.");
 
         // Create the refactor directory
         fs::create_dir("refactor")
             .expect("Failed to create refactor directory.");
 
         // Change into the refactor directory and create a bare git repo
-        env::set_current_dir(Path::new("/tmp").join("refactor"))
-            .expect("ERROR: Could not change into /tmp/refactor directory.");
+        env::set_current_dir(temp_dir.join("refactor"))
+            .expect("ERROR: Could not change into the temporary refactor directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
@@ -602,8 +635,8 @@ mod management {
             .expect("Failed to create remote component directory.");
 
         // Change into the remote directory and create a bare git repo
-        env::set_current_dir(Path::new("/tmp").join("refactor").join("remote"))
-            .expect("ERROR: Could not change into /tmp/refactor/remote directory.");
+        env::set_current_dir(temp_dir.join("refactor").join("remote"))
+            .expect("ERROR: Could not change into the temporary refactor/remote directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
@@ -611,8 +644,8 @@ mod management {
             .expect("failed to initialize bare git repository in refactor directory");
 
         // Go back to the refactor directory
-        env::set_current_dir(Path::new("/tmp").join("refactor"))
-            .expect("ERROR: Could not change into /tmp/refactor directory.");
+        env::set_current_dir(temp_dir.join("refactor"))
+            .expect("ERROR: Could not change into the temporary refactor directory.");
 
         // Start a new git deamon server in the current remote repository
         let mut git_cmd = Command::new("git")
@@ -623,8 +656,8 @@ mod management {
             .expect("ERROR: Could not launch git daemon.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir("/tmp")
-            .expect("ERROR: Could not change into tmp directory: {}");
+        env::set_current_dir(&temp_dir)
+            .expect("ERROR: Could not change into the temporary directory: {}");
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
@@ -635,8 +668,8 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "maincomp component not successfully created.");
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(Path::new("/tmp").join("maincomp"))
-            .expect("ERROR: Could not change into /tmp/refactor/maincomp directory.");
+        env::set_current_dir(temp_dir.join("maincomp"))
+            .expect("ERROR: Could not change into the temporary refactor/maincomp directory.");
 
         // Create a local component
         let output = Command::new(&cmd_path)
@@ -656,8 +689,8 @@ mod management {
         env::set_current_dir(orig_dir)
             .expect("ERROR: Could not change into original directory.");
 
-        assert!(Path::new("/tmp").join("maincomp").exists(), "/tmp/maincomp directory does not exist.");
-        assert!(Path::new("/tmp").join("refactor").join("remote").exists(), "/tmp/refactor/remote directory does not exist.");
+        assert!(temp_dir.join("maincomp").exists(), "the temporary maincomp directory does not exist.");
+        assert!(temp_dir.join("refactor").join("remote").exists(), "the temporary refactor/remote directory does not exist.");
 
         git_cmd.kill().expect("ERROR: git daemon wasn't running");
     }
