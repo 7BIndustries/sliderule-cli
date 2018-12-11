@@ -1,5 +1,3 @@
-extern crate os_info;
-
 use std::fs::File;
 use std::io::Read;
 use std::process::Command;
@@ -9,7 +7,6 @@ mod management {
     use Command;
     use File;
     use Read;
-    use os_info;
     use std::env;
     use std::fs;
     use std::path::Path;
@@ -165,12 +162,6 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
-
         // Check to see if the last test left things dirty
         if temp_dir.join("test_top").exists() {
             panic!("ERROR: Please delete the temporary test_top directory before running these tests.");
@@ -207,12 +198,6 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
-
         // Check to see if the last test left things dirty
         if temp_dir.join("blink_firmware").exists() {
             panic!("ERROR: Please delete the temporary blink_firmware directory before running these tests.");
@@ -247,12 +232,6 @@ mod management {
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
-
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
 
         // Check to see if the last test left things dirty
         if temp_dir.join("test_blank").exists() {
@@ -307,12 +286,6 @@ mod management {
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
-
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
 
         // Check to see if the last test left things dirty
         if temp_dir.join("test_local_remove").exists() {
@@ -386,12 +359,6 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
-
         // Check to see if the last test left things dirty
         if temp_dir.join("test_top_license").exists() {
             panic!("ERROR: Please delete the temporary test_top_license directory before running these tests.");
@@ -445,12 +412,6 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
-
         // Check to see if the last test left things dirty
         if temp_dir.join("test_list_licenses").exists() {
             panic!("ERROR: Please delete the temporary test_list_licenses directory before running these tests.");
@@ -498,12 +459,6 @@ mod management {
 
         let demo_dir = temp_dir.join("demo");
         let working_dir = temp_dir.join("topcomp");
-
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
 
         // Check to make sure any previous runs got cleaned up
         if demo_dir.exists() {
@@ -598,12 +553,6 @@ mod management {
 
         let refactor_dir = temp_dir.join("refactor");
         let remote_dir = temp_dir.join("refactor").join("remote");
-
-        // The test framework doesn't support Windows at this time
-        let info = os_info::get();
-        if info.os_type() == os_info::Type::Windows {
-            panic!("ERROR: This testing framework only supports Linux and MacOS at this time.");
-        }
 
         // Check to make sure any previous runs got cleaned up
         if refactor_dir.exists() {
