@@ -1,9 +1,10 @@
 extern crate argparse;
 extern crate sliderule;
 
+use std::env;
 use std::io;
 use argparse::{ArgumentParser, Store, StoreTrue, List};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn main() {
     // What main command the user is wanting to use
@@ -65,13 +66,13 @@ fn main() {
             }
         }
 
-        sliderule::create_component(&name, &src_license, &docs_license);
+        sliderule::create_component(&get_cwd(), &name, &src_license, &docs_license);
     }
     else if command == "add" {
         // The user is expected to have provided a URL of a remote component that can be downloaded
         let url = &args[0];
 
-        sliderule::add_remote_component(&url);
+        sliderule::add_remote_component(&get_cwd(), &url);
     }
     else if command == "download" {
         let subcommand = &args[0];
@@ -79,19 +80,19 @@ fn main() {
         // Check to see if we have a URL
         if subcommand.contains("/") {
             // git clone here and warn the user that what they're downloading is possibly read only
-            sliderule::download_component(subcommand);
+            sliderule::download_component(&get_cwd(), subcommand);
 
             println!("Unless you have write access to the downloaded repository, this copy will be read-only.")
         }
         else if subcommand == "all" {
-            sliderule::update_local_component();
+            sliderule::update_local_component(&get_cwd());
 
             // Just have npm update the entire project, not install a specific package
-            sliderule::update_dependencies();
+            sliderule::update_dependencies(&get_cwd());
         }
         else if subcommand == "dependencies" {
             // Just have npm update the entire project, not install a specific package
-            sliderule::update_dependencies();
+            sliderule::update_dependencies(&get_cwd());
         }
         else {
             panic!("ERROR: Subcommand of download not recognized.");
@@ -118,7 +119,7 @@ fn main() {
             url = url.trim().to_string();
         }
 
-        sliderule::upload_component(message, url);
+        sliderule::upload_component(&get_cwd(), message, &url);
     }
     else if command == "remove" {
         let name = &args[0];
@@ -142,7 +143,7 @@ fn main() {
         println!("Remove called with {}.", name);
 
         // Deletes a local component's directory, or npm uninstalls a remote component
-        sliderule::remove(name);
+        sliderule::remove(&get_cwd(), name);
     }
     else if command == "refactor" {
         let name = &args[0];
@@ -157,7 +158,7 @@ fn main() {
         }
 
         // Convert the local component into a remote component
-        sliderule::refactor(name.to_string(), url);
+        sliderule::refactor(&get_cwd(), name.to_string(), url);
     }
     else if command == "licenses" {
         let subcommand = &args[0];
@@ -173,10 +174,10 @@ fn main() {
                 docs_license = licenses.1;
             }
 
-            sliderule::change_licenses(&src_license, &docs_license);
+            sliderule::change_licenses(&get_cwd(), &src_license, &docs_license);
         }
         else if subcommand == "list" {
-            sliderule::list_all_licenses();
+            sliderule::list_all_licenses(&get_cwd());
         }
         else {
             panic!("licenses subcommand not understood: {}", subcommand);
@@ -197,7 +198,7 @@ fn main() {
  * Prompt the user to ask for licenses.
  */
 fn ask_for_licenses(display_anyway: bool) -> (String, String) {
-    let licenses = sliderule::get_licenses();
+    let licenses = sliderule::get_licenses(&get_cwd());
     let default_src_license = licenses.0;
     let default_docs_lic = licenses.1;
 
@@ -205,7 +206,7 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
     let mut doc_license = String::new();
 
     // Ask the user for their license choice for the source of this component if they haven't specified it on the command line
-    if sliderule::get_level() == 0 || display_anyway {
+    if sliderule::get_level(&get_cwd()) == 0 || display_anyway {
         // Ask the user to choose a source license
         println!("Please choose a source license for this component.");
         println!("For a list of available licenses see https://spdx.org/licenses/");
@@ -218,7 +219,7 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
     }
 
     // Ask the user for their license choice for the documentation of this component
-    if sliderule::get_level() == 0 || display_anyway {
+    if sliderule::get_level(&get_cwd()) == 0 || display_anyway {
         println!("Please choose a documentation license for this component.");
         println!("For a list of available licenses see https://spdx.org/licenses/");
         println!("Choice [{}]:", default_docs_lic);
@@ -238,4 +239,16 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
     }
 
     (source_license, doc_license)
+}
+
+/*
+* Gets the current working directory for us, and handles any errors.
+*/
+fn get_cwd() -> PathBuf {
+    let path = env::current_dir();
+
+    let cwd = path
+        .expect("Could not get current working directory.");
+
+    cwd
 }

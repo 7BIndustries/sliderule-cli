@@ -139,7 +139,7 @@ mod management {
     /*
      * Makes sure the user will get the correct response if they run the CLI without any commands
      */
-    fn calling_with_no_commands() {
+    fn test_calling_with_no_commands() {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
 
