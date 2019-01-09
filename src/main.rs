@@ -177,20 +177,20 @@ fn main() {
             sliderule::change_licenses(&get_cwd(), &src_license, &docs_license);
         }
         else if subcommand == "list" {
-            sliderule::list_all_licenses(&get_cwd());
+            let license_list = sliderule::list_all_licenses(&get_cwd());
+
+            println!("{}", license_list);
         }
         else {
-            panic!("licenses subcommand not understood: {}", subcommand);
+            println!("licenses subcommand not understood: {}", subcommand);
+            std::process::exit(1);
         }
     }
-    else {
-        // The user has to supply a command, and it needs to be recognized
-        if args.is_empty() {
-            panic!("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options.");
-        }
-        else {
-            panic!("ERROR: Command not recognized: {}", command);
-        }
+
+    // The user has to supply a command, and it needs to be recognized
+    if args.is_empty() {
+        println!("Please supply an command. Run with -h to see the options.");
+        std::process::exit(1);
     }
 }
 
