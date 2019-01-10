@@ -85,14 +85,56 @@ fn main() {
             println!("Unless you have write access to the downloaded repository, this copy will be read-only.")
         }
         else if subcommand == "all" {
-            sliderule::update_local_component(&get_cwd());
+            let output = sliderule::update_local_component(&get_cwd());
+
+            // If something didn't go well, let the user know that too
+            if !output.stderr.is_empty() {
+                for line in output.stderr {
+                    println!("{}", line);
+                }
+            }
+
+            // Let the user know what went well
+            if !output.stdout.is_empty() {
+                for line in output.stdout {
+                    println!("{}", line);
+                }
+            }
 
             // Just have npm update the entire project, not install a specific package
-            sliderule::update_dependencies(&get_cwd());
+            let output = sliderule::update_dependencies(&get_cwd());
+
+            // If something didn't go well, let the user know that too
+            if !output.stderr.is_empty() {
+                for line in output.stderr {
+                    println!("{}", line);
+                }
+            }
+
+            // Let the user know what went well
+            if !output.stdout.is_empty() {
+                for line in output.stdout {
+                    println!("{}", line);
+                }
+            }
         }
         else if subcommand == "dependencies" {
             // Just have npm update the entire project, not install a specific package
-            sliderule::update_dependencies(&get_cwd());
+            let output = sliderule::update_dependencies(&get_cwd());
+
+            // If something didn't go well, let the user know that too
+            if !output.stderr.is_empty() {
+                for line in output.stderr {
+                    println!("{}", line);
+                }
+            }
+
+            // Let the user know what went well
+            if !output.stdout.is_empty() {
+                for line in output.stdout {
+                    println!("{}", line);
+                }
+            }
         }
         else {
             panic!("ERROR: Subcommand of download not recognized.");
