@@ -1,9 +1,10 @@
 extern crate argparse;
 extern crate sliderule;
 
+use argparse::{ArgumentParser, List, Store, StoreTrue};
+use sliderule::SROutput;
 use std::env;
 use std::io;
-use argparse::{ArgumentParser, Store, StoreTrue, List};
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -15,6 +16,7 @@ fn main() {
     let mut message = String::new();
     let mut url = String::new();
     let mut yes_mode_active = false;
+    let mut verbose = false;
 
     // Some items for the command line help interface
     let app_description = "Tool to manage Sliderule projects.";
@@ -35,16 +37,36 @@ fn main() {
             .add_argument("command", Store, cmd_description);
         ap.refer(&mut args)
             .add_argument("arguments", List, args_description);
-        ap.refer(&mut src_license)
-            .add_option(&["-s"], Store, "Specify a source license on the command line.");
-        ap.refer(&mut docs_license)
-            .add_option(&["-d"], Store, "Specify a documentation license on the command line.");
-        ap.refer(&mut message)
-            .add_option(&["-m"], Store, "Specifies the message to attach to changes on an upload.");
-        ap.refer(&mut url)
-            .add_option(&["-u"], Store, "The URL to use when uploading, downloading or adding a component.");
-        ap.refer(&mut yes_mode_active)
-            .add_option(&["-y"], StoreTrue, "Answers yes to any questions for unattended operation.");
+        ap.refer(&mut src_license).add_option(
+            &["-s"],
+            Store,
+            "Specify a source license on the command line.",
+        );
+        ap.refer(&mut docs_license).add_option(
+            &["-d"],
+            Store,
+            "Specify a documentation license on the command line.",
+        );
+        ap.refer(&mut message).add_option(
+            &["-m"],
+            Store,
+            "Specifies the message to attach to changes on an upload.",
+        );
+        ap.refer(&mut url).add_option(
+            &["-u"],
+            Store,
+            "The URL to use when uploading, downloading or adding a component.",
+        );
+        ap.refer(&mut yes_mode_active).add_option(
+            &["-y"],
+            StoreTrue,
+            "Answers yes to any questions for unattended operation.",
+        );
+        ap.refer(&mut verbose).add_option(
+            &["-v"],
+            StoreTrue,
+            "Gives verbose output, helps with debugging why a command did not work.",
+        );
         ap.parse_args_or_exit();
     }
 
@@ -66,15 +88,26 @@ fn main() {
             }
         }
 
-        sliderule::create_component(&get_cwd(), &name, &src_license, &docs_license);
-    }
-    else if command == "add" {
+        let output =
+            sliderule::create_component(&get_cwd(), name.to_string(), src_license, docs_license);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        }
+
+        // Show error information when it happens, whether the user has requested verbose output or not
+        if !output.stdout.is_empty() {
+            print_stderr(&output);
+        }
+
+        println!("Component creation finished.");
+    } else if command == "add" {
         // The user is expected to have provided a URL of a remote component that can be downloaded
         let url = &args[0];
 
-        sliderule::add_remote_component(&get_cwd(), &url);
-    }
-    else if command == "download" {
+        sliderule::add_remote_component(&get_cwd(), &url, None);
+    } else if command == "download" {
         let subcommand = &args[0];
 
         // Check to see if we have a URL
@@ -83,8 +116,7 @@ fn main() {
             sliderule::download_component(&get_cwd(), subcommand);
 
             println!("Unless you have write access to the downloaded repository, this copy will be read-only.")
-        }
-        else if subcommand == "all" {
+        } else if subcommand == "all" {
             let output = sliderule::update_local_component(&get_cwd());
 
             // If something didn't go well, let the user know that too
@@ -117,8 +149,7 @@ fn main() {
                     println!("{}", line);
                 }
             }
-        }
-        else if subcommand == "dependencies" {
+        } else if subcommand == "dependencies" {
             // Just have npm update the entire project, not install a specific package
             let output = sliderule::update_dependencies(&get_cwd());
 
@@ -135,17 +166,16 @@ fn main() {
                     println!("{}", line);
                 }
             }
-        }
-        else {
+        } else {
             panic!("ERROR: Subcommand of download not recognized.");
         }
-    }
-    else if command == "upload" {
+    } else if command == "upload" {
         if message.is_empty() {
             // Get the upload message from the user to mark these changes with
             println!("Message to attach to these project changes:");
 
-            io::stdin().read_line(&mut message)
+            io::stdin()
+                .read_line(&mut message)
                 .expect("ERROR: Failed to read upload message line from user");
 
             message = message.trim().to_string();
@@ -155,23 +185,27 @@ fn main() {
         if !Path::new(".git").exists() && url.is_empty() {
             println!("This project has not been initialized with a repository yet. Enter a URL of an existing repository to upload this component to:");
 
-            io::stdin().read_line(&mut url)
+            io::stdin()
+                .read_line(&mut url)
                 .expect("ERROR: Failed to read name or URL from user.");
 
             url = url.trim().to_string();
         }
 
         sliderule::upload_component(&get_cwd(), message, &url);
-    }
-    else if command == "remove" {
+    } else if command == "remove" {
         let name = &args[0];
 
         if !yes_mode_active {
             let mut answer = String::new();
 
-            println!("Type Y/y and hit enter to continue removing this component: {}", name);
+            println!(
+                "Type Y/y and hit enter to continue removing this component: {}",
+                name
+            );
 
-            io::stdin().read_line(&mut answer)
+            io::stdin()
+                .read_line(&mut answer)
                 .expect("ERROR: Failed to read answer from user.");
 
             // Make sure that the answer was really yes on removal of the component
@@ -186,14 +220,14 @@ fn main() {
 
         // Deletes a local component's directory, or npm uninstalls a remote component
         sliderule::remove(&get_cwd(), name);
-    }
-    else if command == "refactor" {
+    } else if command == "refactor" {
         let name = &args[0];
 
         if url.is_empty() {
             println!("Please enter the URL of an existing repository to upload the component to:");
 
-            io::stdin().read_line(&mut url)
+            io::stdin()
+                .read_line(&mut url)
                 .expect("ERROR: Failed to read name or URL from user.");
 
             url = url.trim().to_string();
@@ -201,8 +235,7 @@ fn main() {
 
         // Convert the local component into a remote component
         sliderule::refactor(&get_cwd(), name.to_string(), url);
-    }
-    else if command == "licenses" {
+    } else if command == "licenses" {
         let subcommand = &args[0];
 
         if subcommand == "change" {
@@ -216,14 +249,12 @@ fn main() {
                 docs_license = licenses.1;
             }
 
-            sliderule::change_licenses(&get_cwd(), &src_license, &docs_license);
-        }
-        else if subcommand == "list" {
+            sliderule::change_licenses(&get_cwd(), src_license, docs_license);
+        } else if subcommand == "list" {
             let license_list = sliderule::list_all_licenses(&get_cwd());
 
             println!("{}", license_list);
-        }
-        else {
+        } else {
             println!("licenses subcommand not understood: {}", subcommand);
             std::process::exit(1);
         }
@@ -233,6 +264,24 @@ fn main() {
     if args.is_empty() {
         println!("Please supply an command. Run with -h to see the options.");
         std::process::exit(1);
+    }
+}
+
+/*
+ * Prints all the lines of standard output to standard output.
+ */
+fn print_stdout(output: &SROutput) {
+    for line in &output.stdout {
+        println!("{}", line);
+    }
+}
+
+/*
+ * Prints all the lines of standard output to standard output.
+ */
+fn print_stderr(output: &SROutput) {
+    for line in &output.stderr {
+        println!("{}", line);
     }
 }
 
@@ -253,7 +302,8 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
         println!("Please choose a source license for this component.");
         println!("For a list of available licenses see https://spdx.org/licenses/");
         println!("Choice [{}]:", default_src_license);
-        io::stdin().read_line(&mut source_license)
+        io::stdin()
+            .read_line(&mut source_license)
             .expect("ERROR: Failed to read name or license from user.");
 
         // If the user didn't choose a license, default to The Unlicense
@@ -265,7 +315,8 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
         println!("Please choose a documentation license for this component.");
         println!("For a list of available licenses see https://spdx.org/licenses/");
         println!("Choice [{}]:", default_docs_lic);
-        io::stdin().read_line(&mut doc_license)
+        io::stdin()
+            .read_line(&mut doc_license)
             .expect("ERROR: Failed to read name or license from user.");
 
         // If the user didn't choose a license, default to The Unlicense
@@ -289,8 +340,7 @@ fn ask_for_licenses(display_anyway: bool) -> (String, String) {
 fn get_cwd() -> PathBuf {
     let path = env::current_dir();
 
-    let cwd = path
-        .expect("Could not get current working directory.");
+    let cwd = path.expect("Could not get current working directory.");
 
     cwd
 }

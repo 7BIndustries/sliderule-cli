@@ -4,12 +4,12 @@ use std::process::Command;
 
 #[cfg(test)]
 mod management {
+    use std::env;
+    use std::fs;
+    use std::path::{Path, PathBuf};
     use Command;
     use File;
     use Read;
-    use std::env;
-    use std::fs;
-    use std::path::Path;
 
     struct Noisy;
     struct Blink;
@@ -101,8 +101,7 @@ mod management {
 
             // Clean up after ourselves
             if demo_dir.exists() {
-                fs::remove_dir_all(demo_dir)
-                    .expect("ERROR not able to delete demo directory.");
+                fs::remove_dir_all(demo_dir).expect("ERROR not able to delete demo directory.");
             }
             if working_dir.exists() {
                 fs::remove_dir_all(working_dir)
@@ -121,8 +120,7 @@ mod management {
 
             // Clean up after ourselves
             if demo_dir.exists() {
-                fs::remove_dir_all(demo_dir)
-                    .expect("ERROR not able to delete demo directory.");
+                fs::remove_dir_all(demo_dir).expect("ERROR not able to delete demo directory.");
             }
             if remote_dir.exists() {
                 fs::remove_dir_all(remote_dir)
@@ -146,8 +144,13 @@ mod management {
         let output = Command::new(cmd_path)
             .output()
             .expect("failed to execute process");
-    
-        assert!(String::from_utf8_lossy(&output.stderr).contains("ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."), "Running sliderule-cli without any commands or options did not throw an error.");
+
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(
+                "ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."
+            ),
+            "Running sliderule-cli without any commands or options did not throw an error."
+        );
     }
 
     #[test]
@@ -164,27 +167,42 @@ mod management {
 
         // Check to see if the last test left things dirty
         if temp_dir.join("test_top").exists() {
-            panic!("ERROR: Please delete the temporary test_top directory before running these tests.");
+            panic!(
+                "ERROR: Please delete the temporary test_top directory before running these tests."
+            );
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into temporary directory.");
+        env::set_current_dir(&temp_dir).expect("ERROR: Could not change into temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_top"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "test_top",
+            ])
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "The test_top component was not created correctly.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "The test_top component was not created correctly."
+        );
 
         // Verify that the proper directories and files within the top level component were created
-        is_valid_component(&temp_dir.join("test_top"), "test_top", "NotASourceLicense", "NotADocLicense");
+        is_valid_component(
+            &temp_dir.join("test_top"),
+            "test_top",
+            "NotASourceLicense",
+            "NotADocLicense",
+        );
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
     }
 
     #[test]
@@ -204,8 +222,7 @@ mod management {
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into temporary directory.");
+        env::set_current_dir(&temp_dir).expect("ERROR: Could not change into temporary directory.");
 
         // Try to download the component
         let output = Command::new(cmd_path)
@@ -213,13 +230,20 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(String::from_utf8_lossy(&output.stdout), "Successfully cloned component repository.\n");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            "Successfully cloned component repository.\n"
+        );
 
-        is_valid_component(&temp_dir.join("blink_firmware"), "blink_firmware", "Unlicense", "CC0-1.0");
+        is_valid_component(
+            &temp_dir.join("blink_firmware"),
+            "blink_firmware",
+            "Unlicense",
+            "CC0-1.0",
+        );
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
     }
 
     #[test]
@@ -235,12 +259,13 @@ mod management {
 
         // Check to see if the last test left things dirty
         if temp_dir.join("test_blank").exists() {
-            panic!("ERROR: Please delete the temporary test_top directory before running these tests.");
+            panic!(
+                "ERROR: Please delete the temporary test_top directory before running these tests."
+            );
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("Could not change into temporary directory.");
+        env::set_current_dir(&temp_dir).expect("Could not change into temporary directory.");
 
         // Try to download the component
         Command::new(&cmd_path)
@@ -257,8 +282,19 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component installed from remote repository."), "Component blink_firmware was not installed from remote repository.");
-        assert!(temp_dir.join("test_blank").join("node_modules").join("blink_firmware").exists(), "blink_firmware directory does not exist.");
+        assert!(
+            String::from_utf8_lossy(&add_output.stdout)
+                .contains("Component installed from remote repository."),
+            "Component blink_firmware was not installed from remote repository."
+        );
+        assert!(
+            temp_dir
+                .join("test_blank")
+                .join("node_modules")
+                .join("blink_firmware")
+                .exists(),
+            "blink_firmware directory does not exist."
+        );
 
         // The remove command
         let remove_output = Command::new(&cmd_path)
@@ -266,11 +302,14 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("Component uninstalled using npm."), "blink_firmware was not successfully uninstalled using npm.");
+        assert!(
+            String::from_utf8_lossy(&remove_output.stdout)
+                .contains("Component uninstalled using npm."),
+            "blink_firmware was not successfully uninstalled using npm."
+        );
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), false);
@@ -299,10 +338,14 @@ mod management {
         // Create the parent component so that we can test sub-component removal
         let create_output = match Command::new(&cmd_path)
             .args(&["create", "test_local_remove"])
-            .output() {
-                Ok(out) => out,
-                Err(e) => panic!("ERROR: On calling CLI with 'create test_local_remove' as arguments: {}", e)
-            };
+            .output()
+        {
+            Ok(out) => out,
+            Err(e) => panic!(
+                "ERROR: On calling CLI with 'create test_local_remove' as arguments: {}",
+                e
+            ),
+        };
 
         // Let the user know if something went wrong
         if !create_output.stderr.is_empty() {
@@ -315,37 +358,57 @@ mod management {
         // Create the local_test component
         let add_output = match Command::new(&cmd_path)
             .args(&["create", "local_test"])
-            .output() {
-                Ok(out) => out,
-                Err(e) => panic!("ERROR: On calling CLI with 'create local_test' as arguments: {}", e)
-            };
+            .output()
+        {
+            Ok(out) => out,
+            Err(e) => panic!(
+                "ERROR: On calling CLI with 'create local_test' as arguments: {}",
+                e
+            ),
+        };
 
         // Let the user know if something went wrong
         if !add_output.stderr.is_empty() {
             panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
         }
 
-        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."), "local_test component not set up successfully.");
-        assert!(temp_dir.join("test_local_remove").join("components").join("local_test").exists(), "local_test component directory does not exist.");
+        assert!(
+            String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."),
+            "local_test component not set up successfully."
+        );
+        assert!(
+            temp_dir
+                .join("test_local_remove")
+                .join("components")
+                .join("local_test")
+                .exists(),
+            "local_test component directory does not exist."
+        );
 
-         // The remove command
+        // The remove command
         let remove_output = match Command::new(&cmd_path)
             .args(&["remove", "-y", "local_test"])
-            .output() {
-                Ok(out) => out,
-                Err(e) => panic!("ERROR: On calling CLI with 'remove local_test' as arguments: {}", e)
-            };
+            .output()
+        {
+            Ok(out) => out,
+            Err(e) => panic!(
+                "ERROR: On calling CLI with 'remove local_test' as arguments: {}",
+                e
+            ),
+        };
 
         // Let the user know if something went wrong
         if !remove_output.stderr.is_empty() {
             panic!("ERROR: {}", String::from_utf8_lossy(&remove_output.stderr));
         }
 
-        assert!(String::from_utf8_lossy(&remove_output.stdout).contains("component removed"), "local_test component not removed successfully.");
+        assert!(
+            String::from_utf8_lossy(&remove_output.stdout).contains("component removed"),
+            "local_test component not removed successfully."
+        );
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
 
         // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
         // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);
@@ -370,16 +433,30 @@ mod management {
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_top_license"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "test_top_license",
+            ])
             .output()
             .expect("failed to execute process");
 
         let package_file = temp_dir.join("test_top_license").join("package.json");
         let dot_file = temp_dir.join("test_top_license").join(".sr");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_top_license not created successfully.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "test_top_license not created successfully."
+        );
 
-        file_contains_content(&package_file, 4, "\"license\": \"(NotASourceLicense AND NotADocLicense)\",");
+        file_contains_content(
+            &package_file,
+            4,
+            "\"license\": \"(NotASourceLicense AND NotADocLicense)\",",
+        );
         file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
         file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
 
@@ -395,13 +472,16 @@ mod management {
         let package_file = temp_dir.join("test_top_license").join("package.json");
         let dot_file = temp_dir.join("test_top_license").join(".sr");
 
-        file_contains_content(&package_file, 4, "\"license\": \"(Unlicense AND CC0-1.0)\",");
+        file_contains_content(
+            &package_file,
+            4,
+            "\"license\": \"(Unlicense AND CC0-1.0)\",",
+        );
         file_contains_content(&dot_file, 0, "source_license: Unlicense,");
         file_contains_content(&dot_file, 1, "documentation_license: CC0-1.0");
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
     }
 
     #[test]
@@ -423,11 +503,21 @@ mod management {
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "test_list_licenses"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "test_list_licenses",
+            ])
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "test_list_licenses component not successfully set up.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "test_list_licenses component not successfully set up."
+        );
 
         env::set_current_dir(temp_dir.join("test_list_licenses"))
             .expect("ERROR: Could not change into the temporary test_list_licenses directory.");
@@ -439,10 +529,13 @@ mod management {
             .expect("failed to execute process");
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Licenses Specified In This Component:"), "License listing not found.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout)
+                .contains("Licenses Specified In This Component:"),
+            "License listing not found."
+        );
         assert!(String::from_utf8_lossy(&output.stdout).contains("Source License: NotASourceLicense, Documentation License: NotADocLicense"), "The correct licenses (source: NotASourceLicense, doc: NotADocLicense) were not listed.");
     }
 
@@ -462,10 +555,16 @@ mod management {
 
         // Check to make sure any previous runs got cleaned up
         if demo_dir.exists() {
-            panic!("ERROR: Please delete {} and rerun tests.", demo_dir.display());
+            panic!(
+                "ERROR: Please delete {} and rerun tests.",
+                demo_dir.display()
+            );
         }
         if working_dir.exists() {
-            panic!("ERROR: please delete {} and rerun tests.", working_dir.display());
+            panic!(
+                "ERROR: please delete {} and rerun tests.",
+                working_dir.display()
+            );
         }
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
@@ -473,8 +572,7 @@ mod management {
             .expect("ERROR: Could not change into the temporary directory.");
 
         // Create the demo directory
-        fs::create_dir("demo")
-            .expect("Failed to create demo directory.");
+        fs::create_dir("demo").expect("Failed to create demo directory.");
 
         // Change into the demo directory and create a bare git repo
         env::set_current_dir(temp_dir.join("demo"))
@@ -486,8 +584,7 @@ mod management {
             .expect("failed to initialize bare git repository in demo directory");
 
         // Create the remote directory for the topcomp project
-        fs::create_dir("topcomp")
-            .expect("Failed to create top component directory.");
+        fs::create_dir("topcomp").expect("Failed to create top component directory.");
 
         // Change into the topcomp directory and create a bare git repo
         env::set_current_dir(temp_dir.join("demo").join("topcomp"))
@@ -506,7 +603,15 @@ mod management {
         let mut git_cmd = Command::new("git")
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
-            .args(&["daemon", "--reuseaddr", "--export-all", "--base-path=.", "--verbose", "--enable=receive-pack", "."])
+            .args(&[
+                "daemon",
+                "--reuseaddr",
+                "--export-all",
+                "--base-path=.",
+                "--verbose",
+                "--enable=receive-pack",
+                ".",
+            ])
             .spawn()
             .expect("ERROR: Could not launch git daemon.");
 
@@ -516,11 +621,21 @@ mod management {
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "topcomp"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "topcomp",
+            ])
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "topcomp component not set up successfully.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "topcomp component not set up successfully."
+        );
 
         // We can put the test directories in tmp without breaking anything or running into permission issues
         env::set_current_dir(temp_dir.join("topcomp"))
@@ -528,19 +643,34 @@ mod management {
 
         // Upload the component to our local server
         let output = Command::new(&cmd_path)
-            .args(&["upload", "-m", "Initial commit", "-u", "git://127.0.0.1/topcomp"])
+            .args(&[
+                "upload",
+                "-m",
+                "Initial commit",
+                "-u",
+                "git://127.0.0.1/topcomp",
+            ])
             .output()
             .expect("failed to upload component using sliderule-cli");
 
         git_cmd.kill().expect("ERROR: git daemon wasn't running");
 
         // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
+        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
 
-        assert!(&output.stderr.is_empty(), "upload command stderr is not empty.");
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Done uploading component."), "topcomp component not uploaded successfully.");
-        assert!(!String::from_utf8_lossy(&output.stdout).contains("fatal: unable to connect to 127.0.0.1"), "sliderule-cli not able to connect to local instance of git daemon.");
+        assert!(
+            &output.stderr.is_empty(),
+            "upload command stderr is not empty."
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Done uploading component."),
+            "topcomp component not uploaded successfully."
+        );
+        assert!(
+            !String::from_utf8_lossy(&output.stdout)
+                .contains("fatal: unable to connect to 127.0.0.1"),
+            "sliderule-cli not able to connect to local instance of git daemon."
+        );
     }
 
     #[test]
@@ -551,105 +681,150 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        let refactor_dir = temp_dir.join("refactor");
-        let remote_dir = temp_dir.join("refactor").join("remote");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
+
+        let refactor_dir = test_dir.join("refactor");
+        let remote_dir = test_dir.join("refactor").join("remote");
 
         // Check to make sure any previous runs got cleaned up
         if refactor_dir.exists() {
-            panic!("ERROR: Please delete {} and rerun tests.", refactor_dir.display());
+            panic!(
+                "ERROR: Please delete {} and rerun tests.",
+                refactor_dir.display()
+            );
         }
         if remote_dir.exists() {
-            panic!("ERROR: please delete {} and rerun tests.", remote_dir.display());
+            panic!(
+                "ERROR: please delete {} and rerun tests.",
+                remote_dir.display()
+            );
         }
 
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
-
         // Create the refactor directory
-        fs::create_dir("refactor")
-            .expect("Failed to create refactor directory.");
-
-        // Change into the refactor directory and create a bare git repo
-        env::set_current_dir(temp_dir.join("refactor"))
-            .expect("ERROR: Could not change into the temporary refactor directory.");
+        fs::create_dir(test_dir.join("refactor")).expect("Failed to create refactor directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
+            .current_dir(test_dir.join("refactor"))
             .output()
             .expect("failed to initialize bare git repository in refactor directory");
 
         // Create the remote component directory
-        fs::create_dir("remote")
+        fs::create_dir(test_dir.join("refactor").join("remote"))
             .expect("Failed to create remote component directory.");
-
-        // Change into the remote directory and create a bare git repo
-        env::set_current_dir(temp_dir.join("refactor").join("remote"))
-            .expect("ERROR: Could not change into the temporary refactor/remote directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
+            .current_dir(test_dir.join("refactor").join("remote"))
             .output()
             .expect("failed to initialize bare git repository in refactor directory");
-
-        // Go back to the refactor directory
-        env::set_current_dir(temp_dir.join("refactor"))
-            .expect("ERROR: Could not change into the temporary refactor directory.");
 
         // Start a new git deamon server in the current remote repository
         let mut git_cmd = Command::new("git")
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
-            .args(&["daemon", "--reuseaddr", "--export-all", "--base-path=.", "--verbose", "--enable=receive-pack", "."])
+            .args(&[
+                "daemon",
+                "--reuseaddr",
+                "--export-all",
+                "--base-path=.",
+                "--verbose",
+                "--enable=receive-pack",
+                ".",
+            ])
+            .current_dir(test_dir.join("refactor"))
             .spawn()
             .expect("ERROR: Could not launch git daemon.");
 
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory: {}");
-
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "maincomp"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "-v",
+                "maincomp",
+            ])
+            .current_dir(&test_dir)
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "maincomp component not successfully created.");
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(temp_dir.join("maincomp"))
-            .expect("ERROR: Could not change into the temporary refactor/maincomp directory.");
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "maincomp component not successfully created."
+        );
 
         // Create a local component
         let output = Command::new(&cmd_path)
-            .args(&["create", "-s", "NotASourceLicense", "-d", "NotADocLicense", "local"])
+            .args(&[
+                "create",
+                "-s",
+                "NotASourceLicense",
+                "-d",
+                "NotADocLicense",
+                "-v",
+                "local",
+            ])
+            .current_dir(test_dir.join("maincomp"))
             .output()
             .expect("failed to execute process");
 
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."), "local component not successfully created.");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
+            "local component not successfully created."
+        );
 
         // Attempt to refactor the component to the remote
         Command::new(&cmd_path)
             .args(&["refactor", "-u", "git://127.0.0.1/remote", "local"])
+            .current_dir(test_dir.join("maincomp"))
             .output()
             .expect("failed to execute process");
 
-        // Set things back the way they were
-        env::set_current_dir(orig_dir)
-            .expect("ERROR: Could not change into original directory.");
-
-        assert!(temp_dir.join("maincomp").exists(), "the temporary maincomp directory does not exist.");
-        assert!(temp_dir.join("refactor").join("remote").exists(), "the temporary refactor/remote directory does not exist.");
+        assert!(
+            test_dir.join("maincomp").exists(),
+            "the temporary maincomp directory does not exist."
+        );
+        assert!(
+            test_dir.join("refactor").join("remote").exists(),
+            "the temporary refactor/remote directory does not exist."
+        );
 
         git_cmd.kill().expect("ERROR: git daemon wasn't running");
+    }
+
+    /*
+     * Sets up a test directory for our use.
+     */
+    fn set_up(temp_dir: &PathBuf, dir_name: &str) -> PathBuf {
+        // let url = format!("git://127.0.0.1/{}", dir_name);
+        let url = "https://github.com/jmwright/toplevel.git";
+
+        let uuid_dir = uuid::Uuid::new_v4();
+        let test_dir_name = format!("temp_{}", uuid_dir);
+
+        // Create the temporary test directory
+        fs::create_dir(temp_dir.join(&test_dir_name))
+            .expect("Unable to create temporary directory.");
+
+        match git2::Repository::clone(&url, temp_dir.join(&test_dir_name).join(dir_name)) {
+            Ok(repo) => repo,
+            Err(e) => panic!("failed to clone: {}", e),
+        };
+
+        temp_dir.join(test_dir_name)
     }
 
     /*
      * Helper function that checks to make sure that given text is present in the files.
      */
     fn file_contains_content(file_path: &Path, line: usize, text: &str) {
-        let mut file = File::open(file_path)
-            .expect("ERROR: Cannot open file to check its contents.");
+        let mut file =
+            File::open(file_path).expect("ERROR: Cannot open file to check its contents.");
         let mut contents = String::new();
         file.read_to_string(&mut contents)
             .expect("Unable to read the file");
@@ -661,14 +836,43 @@ mod management {
     /*
      * Tests if a directory has the correct contents to be a component.
      */
-    fn is_valid_component(component_path: &Path, component_name: &str, source_license: &str, doc_license: &str) {
-        assert!(component_path.join("bom_data.yaml").exists(), "The file {}/bom_data.yaml does not exist.", component_path.display());
-        assert!(component_path.join("components").exists(), "The directory {}/components does not exist.", component_path.display());
+    fn is_valid_component(
+        component_path: &Path,
+        component_name: &str,
+        source_license: &str,
+        doc_license: &str,
+    ) {
+        assert!(
+            component_path.join("bom_data.yaml").exists(),
+            "The file {}/bom_data.yaml does not exist.",
+            component_path.display()
+        );
+        assert!(
+            component_path.join("components").exists(),
+            "The directory {}/components does not exist.",
+            component_path.display()
+        );
         // assert!(component_path.join("dist").exists(), "The directory {}/dist does not exist.",  component_path.display());
-        assert!(component_path.join("docs").exists(), "The directory {}/docs does not exist.",  component_path.display());
-        assert!(component_path.join("package.json").exists(), "The file {}/package.json does not exist.",  component_path.display());
-        assert!(component_path.join("README.md").exists(), "The file {}/README.md does not exist.",  component_path.display());
-        assert!(component_path.join("source").exists(), "The directory {}/source does not exist.",  component_path.display());
+        assert!(
+            component_path.join("docs").exists(),
+            "The directory {}/docs does not exist.",
+            component_path.display()
+        );
+        assert!(
+            component_path.join("package.json").exists(),
+            "The file {}/package.json does not exist.",
+            component_path.display()
+        );
+        assert!(
+            component_path.join("README.md").exists(),
+            "The file {}/README.md does not exist.",
+            component_path.display()
+        );
+        assert!(
+            component_path.join("source").exists(),
+            "The directory {}/source does not exist.",
+            component_path.display()
+        );
 
         let bom_file = component_path.join("bom_data.yaml");
         let package_file = component_path.join("package.json");
@@ -676,13 +880,33 @@ mod management {
         let dot_file = component_path.join(".sr");
 
         // Check the content of the files and directories as appropriate here
-        file_contains_content(&bom_file, 0, &format!("# Bill of Materials Data for {}", component_name));
+        file_contains_content(
+            &bom_file,
+            0,
+            &format!("# Bill of Materials Data for {}", component_name),
+        );
         file_contains_content(&bom_file, 12, "-component_1");
-        file_contains_content(&package_file, 1, &format!("\"name\": \"{}\",", component_name));
-        file_contains_content(&package_file, 4, &format!("\"license\": \"({} AND {})\",", source_license, doc_license));
+        file_contains_content(
+            &package_file,
+            1,
+            &format!("\"name\": \"{}\",", component_name),
+        );
+        file_contains_content(
+            &package_file,
+            4,
+            &format!("\"license\": \"({} AND {})\",", source_license, doc_license),
+        );
         file_contains_content(&readme_file, 0, &format!("# {}", component_name));
         file_contains_content(&readme_file, 1, "New Sliderule component.");
-        file_contains_content(&dot_file, 0, &format!("source_license: {},", source_license));
-        file_contains_content(&dot_file, 1, &format!("documentation_license: {}", doc_license));
+        file_contains_content(
+            &dot_file,
+            0,
+            &format!("source_license: {},", source_license),
+        );
+        file_contains_content(
+            &dot_file,
+            1,
+            &format!("documentation_license: {}", doc_license),
+        );
     }
 }

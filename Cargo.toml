@@ -7,3 +7,7 @@ authors = ["Jeremy Wright <wrightjmf@gmail.com>"]
 sliderule = { path = "../sliderule-rs" }
 argparse = "0.2.2"
 os_info = "1.0.3"
+
+[dev-dependencies]
+git2 = "0.8"
+uuid = { version = "0.7", features = ["v4"] }
