@@ -78,6 +78,10 @@ Everything in Sliderule is a component, even the top level "project" component t
 - `sliderule-cli licenses change [-s SOURCE_LICENSE] [-d DOCUMENTATION_LICENSE]` - Changes the source and/or documentation licenses of the current component.
 - `sliderule-cli licenses list` - Lists all of the licenses that are active for the current component.
 
+### Options
+- `-y` - Answers yes to all questions for unattended operation.
+- `-v` - Provides verbose output that is helpful when debugging why an operation failed.
+
 ## Compiling It Yourself
 
 [sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
@@ -86,14 +90,14 @@ If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux,
 ### Linux & MacOS
 Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ```
-./make.sh build [--release]
+cargo build [--release]
 ```
 Once the build has completed successfully, the sliderule-cli binary should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
 
 ### Windows
 Note that `make.cmd` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ```
-./make.cmd build [--release]
+cargo build [--release]
 ```
 Once the build has completed successfully, the sliderule-cli.exe binary should be located in `.\sliderule-cli\target\debug\`. Supply the full path to the sliderule-cli.exe binary to use it. Alternatively, add the path to sliderule-cli.exe to the `PATH` environment variable.
 
@@ -107,6 +111,6 @@ At this time, tests will only run in Linux and MacOS.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
 ```
-./make.sh test -- --test-threads=1
+cargo test -- --test-threads=1
 ```
 The `test-threads` option is very important. If the tests are run in parallel (the default for cargo), they will fail randomly because they are interferring with each other. At this time the tests are only designed to run on Linux and MacOS.
