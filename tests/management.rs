@@ -550,8 +550,11 @@ mod management {
 
         let temp_dir = env::temp_dir();
 
-        let demo_dir = temp_dir.join("demo");
-        let working_dir = temp_dir.join("topcomp");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
+
+        let demo_dir = test_dir.join("demo");
+        let working_dir = demo_dir.join("topcomp");
 
         // Check to make sure any previous runs got cleaned up
         if demo_dir.exists() {
@@ -567,37 +570,23 @@ mod management {
             );
         }
 
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
-
         // Create the demo directory
-        fs::create_dir("demo").expect("Failed to create demo directory.");
-
-        // Change into the demo directory and create a bare git repo
-        env::set_current_dir(temp_dir.join("demo"))
-            .expect("ERROR: Could not change into the temporary demo directory.");
+        fs::create_dir(&demo_dir).expect("Failed to create demo directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
+            .current_dir(&demo_dir)
             .output()
             .expect("failed to initialize bare git repository in demo directory");
 
         // Create the remote directory for the topcomp project
-        fs::create_dir("topcomp").expect("Failed to create top component directory.");
-
-        // Change into the topcomp directory and create a bare git repo
-        env::set_current_dir(temp_dir.join("demo").join("topcomp"))
-            .expect("ERROR: Could not change into the temporary demo/topcomp directory");
+        fs::create_dir(&working_dir).expect("Failed to create top component directory.");
 
         Command::new("git")
             .args(&["init", "--bare"])
+            .current_dir(&working_dir)
             .output()
             .expect("failed to initialize bare git repository in demo directory");
-
-        // Go back to the demo directory
-        env::set_current_dir(temp_dir.join("demo"))
-            .expect("ERROR: Could not change into the temporary demo directory.");
 
         // Start a new git deamon server in the current remote repository
         let mut git_cmd = Command::new("git")
@@ -612,12 +601,9 @@ mod management {
                 "--enable=receive-pack",
                 ".",
             ])
+            .current_dir(demo_dir)
             .spawn()
             .expect("ERROR: Could not launch git daemon.");
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
 
         // Verify that the directory was created
         let output = Command::new(&cmd_path)
@@ -629,17 +615,14 @@ mod management {
                 "NotADocLicense",
                 "topcomp",
             ])
+            .current_dir(test_dir)
             .output()
             .expect("failed to execute process");
 
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "topcomp component not set up successfully."
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            "Component creation finished."
         );
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(temp_dir.join("topcomp"))
-            .expect("ERROR: Could not change into the temporary topcomp directory.");
 
         // Upload the component to our local server
         let output = Command::new(&cmd_path)
@@ -650,21 +633,19 @@ mod management {
                 "-u",
                 "git://127.0.0.1/topcomp",
             ])
+            .current_dir(working_dir)
             .output()
             .expect("failed to upload component using sliderule-cli");
 
         git_cmd.kill().expect("ERROR: git daemon wasn't running");
 
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
-
         assert!(
             &output.stderr.is_empty(),
             "upload command stderr is not empty."
         );
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Done uploading component."),
-            "topcomp component not uploaded successfully."
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            "Done uploading component."
         );
         assert!(
             !String::from_utf8_lossy(&output.stdout)
