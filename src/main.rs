@@ -94,80 +94,99 @@ fn main() {
         // Show extra output only when the user requests it
         if verbose {
             print_stdout(&output);
+        } else {
+            println!("Component creation finished.");
         }
 
         // Show error information when it happens, whether the user has requested verbose output or not
-        if !output.stdout.is_empty() {
+        if !output.stderr.is_empty() {
             print_stderr(&output);
         }
-
-        println!("Component creation finished.");
     } else if command == "add" {
         // The user is expected to have provided a URL of a remote component that can be downloaded
         let url = &args[0];
 
-        sliderule::add_remote_component(&get_cwd(), &url, None);
+        let output = sliderule::add_remote_component(&get_cwd(), &url, None);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        } else {
+            println!("Component add finished.");
+        }
+
+        // Show error information when it happens, whether the user has requested verbose output or not
+        if !output.stderr.is_empty() {
+            print_stderr(&output);
+        }
     } else if command == "download" {
         let subcommand = &args[0];
 
         // Check to see if we have a URL
         if subcommand.contains("/") {
             // git clone here and warn the user that what they're downloading is possibly read only
-            sliderule::download_component(&get_cwd(), subcommand);
+            let output = sliderule::download_component(&get_cwd(), subcommand);
+
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component download finished.");
+            }
+
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
+            }
 
             println!("Unless you have write access to the downloaded repository, this copy will be read-only.")
         } else if subcommand == "all" {
             let output = sliderule::update_local_component(&get_cwd());
 
-            // If something didn't go well, let the user know that too
-            if !output.stderr.is_empty() {
-                for line in output.stderr {
-                    println!("{}", line);
-                }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component download finished.");
             }
 
-            // Let the user know what went well
-            if !output.stdout.is_empty() {
-                for line in output.stdout {
-                    println!("{}", line);
-                }
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
             }
 
             // Just have npm update the entire project, not install a specific package
             let output = sliderule::update_dependencies(&get_cwd());
 
-            // If something didn't go well, let the user know that too
-            if !output.stderr.is_empty() {
-                for line in output.stderr {
-                    println!("{}", line);
-                }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component download of source and dependencies finished.");
             }
 
-            // Let the user know what went well
-            if !output.stdout.is_empty() {
-                for line in output.stdout {
-                    println!("{}", line);
-                }
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
             }
         } else if subcommand == "dependencies" {
             // Just have npm update the entire project, not install a specific package
             let output = sliderule::update_dependencies(&get_cwd());
 
-            // If something didn't go well, let the user know that too
-            if !output.stderr.is_empty() {
-                for line in output.stderr {
-                    println!("{}", line);
-                }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component download of dependencies only finished.");
             }
 
-            // Let the user know what went well
-            if !output.stdout.is_empty() {
-                for line in output.stdout {
-                    println!("{}", line);
-                }
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
             }
         } else {
-            panic!("ERROR: Subcommand of download not recognized.");
+            eprintln!("ERROR: Subcommand of download not recognized.");
+            std::process::exit(3);
         }
     } else if command == "upload" {
         if message.is_empty() {
@@ -192,7 +211,19 @@ fn main() {
             url = url.trim().to_string();
         }
 
-        sliderule::upload_component(&get_cwd(), message, &url);
+        let output = sliderule::upload_component(&get_cwd(), message, &url);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        } else {
+            println!("Component upload finished.");
+        }
+
+        // Show error information when it happens, whether the user has requested verbose output or not
+        if !output.stderr.is_empty() {
+            print_stderr(&output);
+        }
     } else if command == "remove" {
         let name = &args[0];
 
@@ -216,10 +247,20 @@ fn main() {
             }
         }
 
-        println!("Remove called with {}.", name);
-
         // Deletes a local component's directory, or npm uninstalls a remote component
-        sliderule::remove(&get_cwd(), name);
+        let output = sliderule::remove(&get_cwd(), name);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        } else {
+            println!("Component remove finished.");
+        }
+
+        // Show error information when it happens, whether the user has requested verbose output or not
+        if !output.stderr.is_empty() {
+            print_stderr(&output);
+        }
     } else if command == "refactor" {
         let name = &args[0];
 
@@ -234,7 +275,19 @@ fn main() {
         }
 
         // Convert the local component into a remote component
-        sliderule::refactor(&get_cwd(), name.to_string(), url);
+        let output = sliderule::refactor(&get_cwd(), name.to_string(), url);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        } else {
+            println!("Component refactor finished.");
+        }
+
+        // Show error information when it happens, whether the user has requested verbose output or not
+        if !output.stderr.is_empty() {
+            print_stderr(&output);
+        }
     } else if command == "licenses" {
         let subcommand = &args[0];
 
@@ -249,13 +302,25 @@ fn main() {
                 docs_license = licenses.1;
             }
 
-            sliderule::change_licenses(&get_cwd(), src_license, docs_license);
+            let output = sliderule::change_licenses(&get_cwd(), src_license, docs_license);
+
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component refactor finished.");
+            }
+
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
+            }
         } else if subcommand == "list" {
             let license_list = sliderule::list_all_licenses(&get_cwd());
 
             println!("{}", license_list);
         } else {
-            println!("licenses subcommand not understood: {}", subcommand);
+            eprintln!("licenses subcommand not understood: {}", subcommand);
             std::process::exit(1);
         }
     }
