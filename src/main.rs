@@ -326,7 +326,7 @@ fn main() {
     }
 
     // The user has to supply a command, and it needs to be recognized
-    if args.is_empty() {
+    if command.is_empty() {
         println!("Please supply a command. Run with -h to see the options.");
         std::process::exit(1);
     }
