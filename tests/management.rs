@@ -267,9 +267,6 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        let package_file = test_dir.join("toplevel").join("package.json");
-        let dot_file = test_dir.join("toplevel").join(".sr");
-
         assert!(file_contains_content(
             &package_file,
             9999,
@@ -421,8 +418,8 @@ mod management {
             &output.stderr.is_empty(),
             "upload command stderr is not empty."
         );
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Changes committed using git."));
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Changes pushed using git."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("git repository initialized for project."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Component upload finished."));
         assert!(
             !String::from_utf8_lossy(&output.stdout)
                 .contains("fatal: unable to connect to 127.0.0.1"),
