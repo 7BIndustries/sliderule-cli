@@ -1,5 +1,3 @@
-use std::fs::File;
-use std::io::Read;
 use std::process::Command;
 
 #[cfg(test)]
@@ -8,130 +6,6 @@ mod management {
     use std::fs;
     use std::path::{Path, PathBuf};
     use Command;
-    use File;
-    use Read;
-
-    struct Noisy;
-    struct Blink;
-    struct TestBlank;
-    struct TestLocalRemove;
-    struct TestChangeLicense;
-    struct TestListLicenses;
-    struct TestUpload;
-    struct TestRefactor;
-
-    impl Drop for Noisy {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("test_top").exists() {
-                fs::remove_dir_all(temp_dir.join("test_top"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for Blink {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("blink_firmware").exists() {
-                fs::remove_dir_all(temp_dir.join("blink_firmware"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for TestBlank {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("test_blank").exists() {
-                fs::remove_dir_all(temp_dir.join("test_blank"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for TestLocalRemove {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("test_local_remove").exists() {
-                fs::remove_dir_all(temp_dir.join("test_local_remove"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for TestChangeLicense {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("test_top_license").exists() {
-                fs::remove_dir_all(temp_dir.join("test_top_license"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for TestListLicenses {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            // Clean up after ourselves
-            if temp_dir.join("test_list_licenses").exists() {
-                fs::remove_dir_all(temp_dir.join("test_list_licenses"))
-                    .expect("ERROR: not able to delete top level component directory.");
-            }
-        }
-    }
-
-    impl Drop for TestUpload {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            let demo_dir = temp_dir.join("demo");
-            let working_dir = temp_dir.join("topcomp");
-
-            // Clean up after ourselves
-            if demo_dir.exists() {
-                fs::remove_dir_all(demo_dir).expect("ERROR not able to delete demo directory.");
-            }
-            if working_dir.exists() {
-                fs::remove_dir_all(working_dir)
-                    .expect("ERROR: not able to delete working directory.");
-            }
-        }
-    }
-
-    impl Drop for TestRefactor {
-        fn drop(&mut self) {
-            let temp_dir = env::temp_dir();
-
-            let demo_dir = temp_dir.join("refactor");
-            let remote_dir = temp_dir.join("refactor").join("remote");
-            let working_dir = temp_dir.join("maincomp");
-
-            // Clean up after ourselves
-            if demo_dir.exists() {
-                fs::remove_dir_all(demo_dir).expect("ERROR not able to delete demo directory.");
-            }
-            if remote_dir.exists() {
-                fs::remove_dir_all(remote_dir)
-                    .expect("ERROR: not able to delete remote directory.");
-            }
-            if working_dir.exists() {
-                fs::remove_dir_all(working_dir)
-                    .expect("ERROR: not able to delete remote directory.");
-            }
-        }
-    }
 
     #[test]
     /*
@@ -145,11 +19,9 @@ mod management {
             .output()
             .expect("failed to execute process");
 
-        assert!(
-            String::from_utf8_lossy(&output.stderr).contains(
-                "ERROR: Please supply an command to sliderule-cli. Run with -h to see the options."
-            ),
-            "Running sliderule-cli without any commands or options did not throw an error."
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            "Please supply a command. Run with -h to see the options."
         );
     }
 
@@ -159,50 +31,43 @@ mod management {
      * the files and directories have the appropriate content in them.
      */
     fn test_create_top_level_component_structure() {
-        let _my_setup = Noisy;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("test_top").exists() {
-            panic!(
-                "ERROR: Please delete the temporary test_top directory before running these tests."
-            );
-        }
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir).expect("ERROR: Could not change into temporary directory.");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
         // Verify that the directory was created
         let output = Command::new(cmd_path)
             .args(&[
                 "create",
                 "-s",
-                "NotASourceLicense",
+                "TestSourceLicense",
                 "-d",
-                "NotADocLicense",
+                "TestDocLicense",
                 "test_top",
             ])
+            .current_dir(&test_dir)
             .output()
             .expect("failed to execute process");
 
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "The test_top component was not created correctly."
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            "Component creation finished."
         );
 
         // Verify that the proper directories and files within the top level component were created
-        is_valid_component(
-            &temp_dir.join("test_top"),
+        assert!(is_valid_component(
+            &test_dir.join("test_top"),
             "test_top",
-            "NotASourceLicense",
-            "NotADocLicense",
-        );
-
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
+            "TestSourceLicense",
+            "TestDocLicense",
+        ));
     }
 
     #[test]
@@ -210,109 +75,100 @@ mod management {
      * Tests the ability to download (clone) a component from a repo.
      */
     fn test_download_component() {
-        let _my_setup = Blink;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("blink_firmware").exists() {
-            panic!("ERROR: Please delete the temporary blink_firmware directory before running these tests.");
-        }
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir).expect("ERROR: Could not change into temporary directory.");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
         // Try to download the component
         let output = Command::new(cmd_path)
             .args(&["download", "https://github.com/jmwright/blink_firmware.git"])
+            .current_dir(&test_dir)
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(
-            String::from_utf8_lossy(&output.stdout),
-            "Successfully cloned component repository.\n"
-        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Component download finished."));
 
-        is_valid_component(
-            &temp_dir.join("blink_firmware"),
+        assert!(is_valid_component(
+            &test_dir.join("blink_firmware"),
             "blink_firmware",
             "Unlicense",
             "CC0-1.0",
-        );
-
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
+        ));
     }
 
     #[test]
     /*
-     * Tests the addition and removal of a remove component.
+     * Tests the addition and removal of a remote component.
      */
     fn test_add_remove_component() {
-        let _my_setup = TestBlank;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("test_blank").exists() {
-            panic!(
-                "ERROR: Please delete the temporary test_top directory before running these tests."
-            );
-        }
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir).expect("Could not change into temporary directory.");
-
-        // Try to download the component
-        Command::new(&cmd_path)
-            .args(&["create", "test_blank"])
-            .output()
-            .expect("failed to execute process");
-
-        env::set_current_dir(temp_dir.join("test_blank"))
-            .expect("Could not change into the temporary test_blank directory.");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
         // The add command
         let add_output = Command::new(&cmd_path)
-            .args(&["add", "https://github.com/m30-jrs/blink_firmware.git"])
+            .args(&["add", "https://github.com/jmwright/arduino-sr.git"])
+            .current_dir(&test_dir.join("toplevel"))
             .output()
             .expect("failed to execute process");
 
+        assert!(String::from_utf8_lossy(&add_output.stdout).contains("Component add finished."));
+
+        // Make sure that the newly installed remote component is actually there
         assert!(
-            String::from_utf8_lossy(&add_output.stdout)
-                .contains("Component installed from remote repository."),
-            "Component blink_firmware was not installed from remote repository."
-        );
-        assert!(
-            temp_dir
-                .join("test_blank")
+            &test_dir
+                .join("toplevel")
                 .join("node_modules")
-                .join("blink_firmware")
+                .join("arduino-sr")
                 .exists(),
-            "blink_firmware directory does not exist."
+            "arduino-sr component directory does not exist."
         );
+
+        // Make sure the component is valid
+        assert!(is_valid_component(
+            &test_dir
+                .join("toplevel")
+                .join("node_modules")
+                .join("arduino-sr"),
+            "arduino-sr",
+            "Unlicense",
+            "CC0-1.0",
+        ));
 
         // The remove command
         let remove_output = Command::new(&cmd_path)
-            .args(&["remove", "-y", "blink_firmware"])
+            .args(&["remove", "-y", "arduino-sr"])
+            .current_dir(&test_dir.join("toplevel"))
             .output()
             .expect("failed to execute process");
 
         assert!(
-            String::from_utf8_lossy(&remove_output.stdout)
-                .contains("Component uninstalled using npm."),
-            "blink_firmware was not successfully uninstalled using npm."
+            String::from_utf8_lossy(&remove_output.stdout).contains("Component remove finished.")
         );
 
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
-
-        // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
-        // assert_eq!(Path::new("/tmp").join("test_blank").join("node_modules").join("blink_firmware").exists(), false);
+        // Make sure that the newly removed remote component was actually removed
+        assert!(
+            !&test_dir
+                .join("toplevel")
+                .join("node_modules")
+                .join("arduino-sr")
+                .exists(),
+            "arduino-sr component directory does not exist."
+        );
     }
 
     #[test]
@@ -320,74 +176,21 @@ mod management {
      * Tests the removal of a local component.
      */
     fn test_remove_local() {
-        let _my_setup = TestLocalRemove;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("test_local_remove").exists() {
-            panic!("ERROR: Please delete the temporary test_local_remove directory before running these tests.");
-        }
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
-
-        // Create the parent component so that we can test sub-component removal
-        let create_output = match Command::new(&cmd_path)
-            .args(&["create", "test_local_remove"])
-            .output()
-        {
-            Ok(out) => out,
-            Err(e) => panic!(
-                "ERROR: On calling CLI with 'create test_local_remove' as arguments: {}",
-                e
-            ),
-        };
-
-        // Let the user know if something went wrong
-        if !create_output.stderr.is_empty() {
-            panic!("ERROR: {}", String::from_utf8_lossy(&create_output.stderr));
-        }
-
-        env::set_current_dir(temp_dir.join("test_local_remove"))
-            .expect("ERROR: Could not change into the temporary test_local_remove directory.");
-
-        // Create the local_test component
-        let add_output = match Command::new(&cmd_path)
-            .args(&["create", "local_test"])
-            .output()
-        {
-            Ok(out) => out,
-            Err(e) => panic!(
-                "ERROR: On calling CLI with 'create local_test' as arguments: {}",
-                e
-            ),
-        };
-
-        // Let the user know if something went wrong
-        if !add_output.stderr.is_empty() {
-            panic!("ERROR: {:?}", String::from_utf8_lossy(&add_output.stderr));
-        }
-
-        assert!(
-            String::from_utf8_lossy(&add_output.stdout).contains("Finished setting up component."),
-            "local_test component not set up successfully."
-        );
-        assert!(
-            temp_dir
-                .join("test_local_remove")
-                .join("components")
-                .join("local_test")
-                .exists(),
-            "local_test component directory does not exist."
-        );
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
         // The remove command
         let remove_output = match Command::new(&cmd_path)
-            .args(&["remove", "-y", "local_test"])
+            .args(&["remove", "-y", "level1"])
+            .current_dir(&test_dir.join("toplevel"))
             .output()
         {
             Ok(out) => out,
@@ -397,139 +200,112 @@ mod management {
             ),
         };
 
-        // Let the user know if something went wrong
-        if !remove_output.stderr.is_empty() {
-            panic!("ERROR: {}", String::from_utf8_lossy(&remove_output.stderr));
-        }
-
+        // stderr should be empty
         assert!(
-            String::from_utf8_lossy(&remove_output.stdout).contains("component removed"),
-            "local_test component not removed successfully."
+            remove_output.stderr.is_empty(),
+            "stderr was not empty on local component remove"
         );
 
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
+        // Check to make sure the CLI thinks it was successful in removing the local component
+        assert_eq!(
+            String::from_utf8_lossy(&remove_output.stdout).trim(),
+            "Component remove finished."
+        );
 
-        // TODO: We can't control when the OS will actually remove the file/directory. Figure this out
-        // assert_eq!(Path::new("/tmp").join("test_local_remove").join("components").join("local_test").exists(), false);
+        // Make sure that the local component was actually removed
+        assert!(!&test_dir
+            .join("toplevel")
+            .join("components")
+            .join("level1")
+            .exists());
     }
 
     #[test]
     fn test_change_license() {
-        let _my_setup = TestChangeLicense;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("test_top_license").exists() {
-            panic!("ERROR: Please delete the temporary test_top_license directory before running these tests.");
-        }
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
+        let package_file = test_dir.join("toplevel").join("package.json");
+        let dot_file = test_dir.join("toplevel").join(".sr");
 
-        // Verify that the directory was created
-        let output = Command::new(&cmd_path)
-            .args(&[
-                "create",
-                "-s",
-                "NotASourceLicense",
-                "-d",
-                "NotADocLicense",
-                "test_top_license",
-            ])
-            .output()
-            .expect("failed to execute process");
-
-        let package_file = temp_dir.join("test_top_license").join("package.json");
-        let dot_file = temp_dir.join("test_top_license").join(".sr");
-
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "test_top_license not created successfully."
-        );
-
-        file_contains_content(
+        assert!(file_contains_content(
             &package_file,
             4,
-            "\"license\": \"(NotASourceLicense AND NotADocLicense)\",",
-        );
-        file_contains_content(&dot_file, 0, "source_license: NotASourceLicense,");
-        file_contains_content(&dot_file, 1, "documentation_license: NotADocLicense");
+            "\"license\": \"(Unlicense AND NotASourceLicense AND CC0-1.0 AND CC-BY-4.0 AND NotADocLicense)\",",
+        ));
 
-        env::set_current_dir(temp_dir.join("test_top_license"))
-            .expect("ERROR: Could not change into the temporary test_top_license directory.");
+        assert!(file_contains_content(
+            &dot_file,
+            0,
+            "source_license: Unlicense,"
+        ));
+        assert!(file_contains_content(
+            &dot_file,
+            1,
+            "documentation_license: CC0-1.0"
+        ));
 
         // Change the license and verify
         Command::new(cmd_path)
-            .args(&["licenses", "change", "-s", "Unlicense", "-d", "CC0-1.0"])
+            .args(&[
+                "licenses",
+                "change",
+                "-s",
+                "TestSourceLicense",
+                "-d",
+                "TestDocLicense",
+            ])
+            .current_dir(test_dir.join("toplevel"))
             .output()
             .expect("failed to execute process");
 
-        let package_file = temp_dir.join("test_top_license").join("package.json");
-        let dot_file = temp_dir.join("test_top_license").join(".sr");
+        let package_file = test_dir.join("toplevel").join("package.json");
+        let dot_file = test_dir.join("toplevel").join(".sr");
 
-        file_contains_content(
+        assert!(file_contains_content(
             &package_file,
-            4,
-            "\"license\": \"(Unlicense AND CC0-1.0)\",",
-        );
-        file_contains_content(&dot_file, 0, "source_license: Unlicense,");
-        file_contains_content(&dot_file, 1, "documentation_license: CC0-1.0");
-
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
+            9999,
+            "\"license\": \"(Unlicense AND NotASourceLicense AND TestSourceLicense AND CC0-1.0 AND CC-BY-4.0 AND NotADocLicense AND TestDocLicense)\",",
+        ));
+        assert!(file_contains_content(
+            &dot_file,
+            0,
+            "source_license: TestSourceLicense,"
+        ));
+        assert!(file_contains_content(
+            &dot_file,
+            1,
+            "documentation_license: TestDocLicense"
+        ));
     }
 
     #[test]
     fn test_list_licenses() {
-        let _my_setup = TestListLicenses;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
-        // Check to see if the last test left things dirty
-        if temp_dir.join("test_list_licenses").exists() {
-            panic!("ERROR: Please delete the temporary test_list_licenses directory before running these tests.");
-        }
-
-        // We can put the test directories in tmp without breaking anything or running into permission issues
-        env::set_current_dir(&temp_dir)
-            .expect("ERROR: Could not change into the temporary directory.");
-
-        // Verify that the directory was created
-        let output = Command::new(&cmd_path)
-            .args(&[
-                "create",
-                "-s",
-                "NotASourceLicense",
-                "-d",
-                "NotADocLicense",
-                "test_list_licenses",
-            ])
-            .output()
-            .expect("failed to execute process");
-
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "test_list_licenses component not successfully set up."
-        );
-
-        env::set_current_dir(temp_dir.join("test_list_licenses"))
-            .expect("ERROR: Could not change into the temporary test_list_licenses directory.");
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
 
         // Change the license and verify
         let output = Command::new(&cmd_path)
             .args(&["licenses", "list"])
+            .current_dir(&test_dir.join("toplevel"))
             .output()
             .expect("failed to execute process");
-
-        // Set things back the way they were
-        env::set_current_dir(orig_dir).expect("ERROR: Could not change into original directory.");
 
         assert!(
             String::from_utf8_lossy(&output.stdout)
@@ -544,9 +320,11 @@ mod management {
      * Tests pushing component changes to a remote repository.
      */
     fn test_upload() {
-        let _my_setup = TestUpload;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
@@ -643,10 +421,8 @@ mod management {
             &output.stderr.is_empty(),
             "upload command stderr is not empty."
         );
-        assert_eq!(
-            String::from_utf8_lossy(&output.stdout).trim(),
-            "Done uploading component."
-        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Changes committed using git."));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Changes pushed using git."));
         assert!(
             !String::from_utf8_lossy(&output.stdout)
                 .contains("fatal: unable to connect to 127.0.0.1"),
@@ -656,9 +432,11 @@ mod management {
 
     #[test]
     fn test_refactor() {
-        let _my_setup = TestRefactor;
-        let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join("debug")
+            .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
 
@@ -803,15 +581,25 @@ mod management {
     /*
      * Helper function that checks to make sure that given text is present in the files.
      */
-    fn file_contains_content(file_path: &Path, line: usize, text: &str) {
-        let mut file =
-            File::open(file_path).expect("ERROR: Cannot open file to check its contents.");
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)
-            .expect("Unable to read the file");
-        let contents: Vec<&str> = contents.split("\n").collect();
+    fn file_contains_content(file_path: &Path, line: usize, text: &str) -> bool {
+        let contains_content: bool;
 
-        assert_eq!(contents[line].trim(), text);
+        // Read the contents of the file
+        let contents =
+            fs::read_to_string(file_path).expect("ERROR: Cannot read the contents of the file.");
+
+        // See if the user just wants to make sure the content is somewhere in the file
+        if line == 9999 {
+            contains_content = contents.contains(text);
+        } else {
+            // Break the file down into something we can index
+            let contents: Vec<&str> = contents.lines().collect();
+
+            // See if the line we are interested in is exactly the content specified
+            contains_content = contents[line].trim() == text;
+        }
+
+        contains_content
     }
 
     /*
@@ -822,38 +610,50 @@ mod management {
         component_name: &str,
         source_license: &str,
         doc_license: &str,
-    ) {
-        assert!(
-            component_path.join("bom_data.yaml").exists(),
-            "The file {}/bom_data.yaml does not exist.",
-            component_path.display()
-        );
-        assert!(
-            component_path.join("components").exists(),
-            "The directory {}/components does not exist.",
-            component_path.display()
-        );
-        // assert!(component_path.join("dist").exists(), "The directory {}/dist does not exist.",  component_path.display());
-        assert!(
-            component_path.join("docs").exists(),
-            "The directory {}/docs does not exist.",
-            component_path.display()
-        );
-        assert!(
-            component_path.join("package.json").exists(),
-            "The file {}/package.json does not exist.",
-            component_path.display()
-        );
-        assert!(
-            component_path.join("README.md").exists(),
-            "The file {}/README.md does not exist.",
-            component_path.display()
-        );
-        assert!(
-            component_path.join("source").exists(),
-            "The directory {}/source does not exist.",
-            component_path.display()
-        );
+    ) -> bool {
+        let mut is_valid = true;
+
+        // Make sure the BoM data file exists
+        if !component_path.join("bom_data.yaml").exists() {
+            is_valid = false;
+            println!(
+                "The file {:?}/bom_data.yaml does not exist.",
+                component_path
+            );
+        }
+
+        // Make sure the component directory exists
+        if !component_path.join("components").exists() {
+            is_valid = false;
+            println!(
+                "The directory {:?}/components does not exist.",
+                component_path
+            );
+        }
+
+        // Make sure the docs directory exists
+        if !component_path.join("docs").exists() {
+            is_valid = false;
+            println!("The directory {:?}/docs does not exist.", component_path);
+        }
+
+        // Make sure the package.json file exists
+        if !component_path.join("package.json").exists() {
+            is_valid = false;
+            println!("The file {:?}/package.json does not exist.", component_path);
+        }
+
+        // Make sure the README.md file exists
+        if !component_path.join("README.md").exists() {
+            is_valid = false;
+            println!("The file {:?}/README.md does not exist.", component_path);
+        }
+
+        // Make sure the source directory exists
+        if !component_path.join("source").exists() {
+            is_valid = false;
+            println!("The directory {:?}/source does not exist.", component_path);
+        }
 
         let bom_file = component_path.join("bom_data.yaml");
         let package_file = component_path.join("package.json");
@@ -861,33 +661,65 @@ mod management {
         let dot_file = component_path.join(".sr");
 
         // Check the content of the files and directories as appropriate here
-        file_contains_content(
+        if !file_contains_content(
             &bom_file,
             0,
             &format!("# Bill of Materials Data for {}", component_name),
-        );
-        file_contains_content(&bom_file, 12, "-component_1");
-        file_contains_content(
+        ) {
+            is_valid = false;
+            println!(
+                "The bill to materials file in {:?} does not contain the correct header.",
+                component_path
+            );
+        }
+        if !file_contains_content(&bom_file, 12, "-component_1") {
+            is_valid = false;
+            println!("The bill to materials file in {:?} does not contain the '-component_1' entry in the right place.", component_path);
+        }
+        if !file_contains_content(
             &package_file,
-            1,
+            9999,
             &format!("\"name\": \"{}\",", component_name),
-        );
-        file_contains_content(
+        ) {
+            is_valid = false;
+            println!("The package.json file in {:?} does not contain the component name entry in the right place.", component_path);
+        }
+        if !file_contains_content(
             &package_file,
-            4,
+            9999,
             &format!("\"license\": \"({} AND {})\",", source_license, doc_license),
-        );
-        file_contains_content(&readme_file, 0, &format!("# {}", component_name));
-        file_contains_content(&readme_file, 1, "New Sliderule component.");
-        file_contains_content(
+        ) {
+            is_valid = false;
+            println!("The package.json file in {:?} does not contain the the correct license entry in the right place.", component_path);
+        }
+        if !file_contains_content(&readme_file, 0, &format!("# {}", component_name)) {
+            is_valid = false;
+            println!("The README.md file in {:?} does not contain the the correct header entry in the right place.", component_path);
+        }
+        if !file_contains_content(&readme_file, 1, "New Sliderule component.") {
+            is_valid = false;
+            println!("The README.md file in {:?} does not contain the the correct Sliderule mention in the right place.", component_path);
+        }
+        if !file_contains_content(
             &dot_file,
             0,
             &format!("source_license: {},", source_license),
-        );
-        file_contains_content(
+        ) {
+            is_valid = false;
+            println!(
+                "The .sr file in {:?} does not contain the the correct source license in the right place.",
+                component_path
+            );
+        }
+        if !file_contains_content(
             &dot_file,
             1,
             &format!("documentation_license: {}", doc_license),
-        );
+        ) {
+            is_valid = false;
+            println!("The .sr file in {:?} does not contain the the correct documentation license in the right place.", component_path);
+        }
+
+        is_valid
     }
 }

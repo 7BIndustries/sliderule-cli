@@ -290,9 +290,13 @@ fn main() {
         }
     } else if command == "licenses" {
         let subcommand = &args[0];
+        let mut licenses = (String::new(), String::new());
 
         if subcommand == "change" {
-            let licenses = ask_for_licenses(true);
+            // Only ask for the licenses interactively if they weren't specified on the command line
+            if src_license.is_empty() || docs_license.is_empty() {
+                licenses = ask_for_licenses(false);
+            }
 
             // Handle the occurrence of someone specifying licenses on the command line
             if src_license.is_empty() {
@@ -308,7 +312,7 @@ fn main() {
             if verbose {
                 print_stdout(&output);
             } else {
-                println!("Component refactor finished.");
+                println!("License change finished.");
             }
 
             // Show error information when it happens, whether the user has requested verbose output or not
@@ -337,7 +341,9 @@ fn main() {
  */
 fn print_stdout(output: &SROutput) {
     for line in &output.stdout {
-        println!("{}", line);
+        if !line.is_empty() {
+            println!("{}", line);
+        }
     }
 }
 
@@ -346,7 +352,9 @@ fn print_stdout(output: &SROutput) {
  */
 fn print_stderr(output: &SROutput) {
     for line in &output.stderr {
-        println!("{}", line);
+        if !line.is_empty() {
+            println!("{}", line);
+        }
     }
 }
 
