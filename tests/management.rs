@@ -418,7 +418,8 @@ mod management {
             &output.stderr.is_empty(),
             "upload command stderr is not empty."
         );
-        assert!(String::from_utf8_lossy(&output.stdout).contains("git repository initialized for project."));
+        assert!(String::from_utf8_lossy(&output.stdout)
+            .contains("git repository initialized for project."));
         assert!(String::from_utf8_lossy(&output.stdout).contains("Component upload finished."));
         assert!(
             !String::from_utf8_lossy(&output.stdout)
