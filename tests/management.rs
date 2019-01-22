@@ -267,11 +267,14 @@ mod management {
             .output()
             .expect("failed to execute process");
 
+        // Make sure the source license was changed
         assert!(file_contains_content(
             &package_file,
             9999,
-            "\"license\": \"(Unlicense AND NotASourceLicense AND TestSourceLicense AND CC0-1.0 AND CC-BY-4.0 AND NotADocLicense AND TestDocLicense)\",",
+            "TestSourceLicense",
         ));
+        // Make sure the doc license was changed
+        assert!(file_contains_content(&package_file, 9999, "TestDocLicense",));
         assert!(file_contains_content(
             &dot_file,
             0,
