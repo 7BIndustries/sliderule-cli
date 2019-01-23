@@ -65,3 +65,7 @@ build: false
 
 test_script:
   - cargo test --release
+
+after_test:
+  - taskkill /F /IM git
+  - taskkill /F /IM git-daemon
