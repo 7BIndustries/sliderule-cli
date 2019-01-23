@@ -64,8 +64,4 @@ install:
 build: false
 
 test_script:
-  - cargo test --release
-
-after_test:
-  - taskkill /F /IM git
-  - taskkill /F /IM git-daemon
+  - cargo test --release  -- --test-threads=1
