@@ -1,7 +1,7 @@
 # sliderule-cli
 
 [![Travis Build Status](https://travis-ci.org/7BIndustries/sliderule-cli.svg?branch=master)](https://travis-ci.org/7BIndustries/sliderule-cli)
-[![codecov](https://codecov.io/gh/7BIndustries/sliderule-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/7BIndustries/sliderule-cli)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/gyop7qstm030gqdx/branch/master?svg=true)](https://ci.appveyor.com/project/jmwright/sliderule-cli)
 
 ## Introduction
 This is a command line implementation of the distributed open source hardware (OSHW) [DOF methodology](https://github.com/Mach30/dof) being developed by [Mach 30](http://mach30.org/).
