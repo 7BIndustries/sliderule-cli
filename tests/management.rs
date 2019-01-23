@@ -13,13 +13,11 @@ mod management {
      */
     fn test_calling_with_no_commands() {
         let orig_dir = env::current_dir().unwrap();
-        let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
-        dbg!(&orig_dir);
-        let paths = fs::read_dir(orig_dir).unwrap();
+        let cmd_path = orig_dir
+            .join("target")
+            .join(cargo_mode())
+            .join("sliderule-cli");
 
-        for path in paths {
-            println!("Name: {}", path.unwrap().path().display())
-        }
         let output = Command::new(cmd_path)
             .output()
             .expect("failed to execute process");
@@ -39,7 +37,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -83,7 +81,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -116,7 +114,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -184,7 +182,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -230,7 +228,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -297,7 +295,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -328,7 +326,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -441,7 +439,7 @@ mod management {
         let cmd_path = env::current_dir()
             .unwrap()
             .join("target")
-            .join("debug")
+            .join(cargo_mode())
             .join("sliderule-cli");
 
         let temp_dir = env::temp_dir();
@@ -727,5 +725,18 @@ mod management {
         }
 
         is_valid
+    }
+
+    // Tells us whether cargo was run in debug or release mode
+    fn cargo_mode() -> String {
+        let mode: String;
+
+        if cfg!(debug_assertions) {
+            mode = String::from("debug");
+        } else {
+            mode = String::from("release");
+        }
+
+        mode
     }
 }
