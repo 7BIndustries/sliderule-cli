@@ -14,7 +14,7 @@ mod management {
     fn test_calling_with_no_commands() {
         let orig_dir = env::current_dir().unwrap();
         let cmd_path = orig_dir.join("target").join("debug").join("sliderule-cli");
-
+        dbg!(orig_dir);
         let output = Command::new(cmd_path)
             .output()
             .expect("failed to execute process");
