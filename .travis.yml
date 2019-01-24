@@ -29,7 +29,7 @@ script:
 - cargo fmt --all -- --check
 - cargo clean
 - cargo build
-- cargo test
+- cargo test --release  -- --test-threads=1
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
