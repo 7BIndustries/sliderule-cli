@@ -318,10 +318,10 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("Source License: NotASourceLicense, Documentation License: NotADocLicense"), "The correct licenses (source: NotASourceLicense, doc: NotADocLicense) were not listed.");
     }
 
-    #[test]
     /*
      * Tests pushing component changes to a remote repository.
      */
+    // #[test]
     fn test_upload() {
         let cmd_path = env::current_dir()
             .unwrap()
@@ -418,7 +418,7 @@ mod management {
             .output()
             .expect("failed to upload component using sliderule-cli");
 
-        // git_cmd.kill().expect("ERROR: git daemon wasn't running");
+        git_cmd.kill().expect("ERROR: git daemon wasn't running");
 
         assert!(
             &output.stderr.is_empty(),
@@ -434,7 +434,7 @@ mod management {
         );
     }
 
-    #[test]
+    // #[test]
     fn test_refactor() {
         let cmd_path = env::current_dir()
             .unwrap()
@@ -557,7 +557,7 @@ mod management {
             "the temporary refactor/remote directory does not exist."
         );
 
-        // git_cmd.kill().expect("ERROR: git daemon wasn't running");
+        git_cmd.kill().expect("ERROR: git daemon wasn't running");
     }
 
     /*
