@@ -418,7 +418,7 @@ mod management {
             .output()
             .expect("failed to upload component using sliderule-cli");
 
-        git_cmd.kill().expect("ERROR: git daemon wasn't running");
+        // git_cmd.kill().expect("ERROR: git daemon wasn't running");
 
         assert!(
             &output.stderr.is_empty(),
