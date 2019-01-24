@@ -372,7 +372,7 @@ mod management {
             .expect("failed to initialize bare git repository in demo directory");
 
         // Start a new git deamon server in the current remote repository
-        let mut git_cmd = Command::new("git")
+        Command::new("git")
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .args(&[
@@ -439,7 +439,7 @@ mod management {
         kill_git();
     }
 
-    // #[test]
+    #[test]
     fn test_refactor() {
         let cmd_path = env::current_dir()
             .unwrap()
@@ -489,7 +489,7 @@ mod management {
             .expect("failed to initialize bare git repository in refactor directory");
 
         // Start a new git deamon server in the current remote repository
-        let mut git_cmd = Command::new("git")
+        Command::new("git")
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .args(&[
@@ -562,9 +562,11 @@ mod management {
             "the temporary refactor/remote directory does not exist."
         );
 
-        git_cmd.kill().expect("ERROR: git daemon wasn't running");
+        // Make sure there are no git processes left around after we're done
+        kill_git();
     }
 
+    // Cleans up the git daemon processes after tests run
     fn kill_git() {
         let info = os_info::get();
 
@@ -588,8 +590,6 @@ mod management {
                 .args(&["/f", "/t", "/im", "git-daemon.exe"])
                 .output()
                 .unwrap();
-        } else if info.os_type() == os_info::Type::Macos {
-
         } else {
             Command::new("killall")
                 .args(&["git"])
