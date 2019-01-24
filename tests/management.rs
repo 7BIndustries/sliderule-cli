@@ -321,7 +321,7 @@ mod management {
     /*
      * Tests pushing component changes to a remote repository.
      */
-    // #[test]
+    #[test]
     fn test_upload() {
         let cmd_path = env::current_dir()
             .unwrap()
