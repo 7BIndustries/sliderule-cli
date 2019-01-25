@@ -15,7 +15,7 @@ git and npm must be installed separately for sliderule-cli to work. Binaries for
 ### Windows
 - [Install git](https://git-scm.com/download/win)
 - [Install npm](https://www.npmjs.com/package/npm#windows-computers)
-- Download the [latest Windows build](http://7bindustries.com/downloads/sliderule-cli_dev_Windows_20181130.zip) of sliderule-cli.
+- Download the [latest Windows build](https://github.com/7BIndustries/sliderule-cli/releases/download/v0.2.0/sliderule-cli_Windows_v0.2.0.zip) of sliderule-cli.
 - Extract the archive to a convenient location (i.e. `C:\Users\[you]\`).
 - Run the command with the full path (i.e. `C:\Users\[you]\sliderule-cli\sliderule-cli.exe`).
 
@@ -30,7 +30,7 @@ Unfortunately, at this time the passphrase has to be removed from the private ke
 
 - [Install git](https://git-scm.com/download/linux)
 - [Install npm](https://www.npmjs.com/package/npm#fancy-install-unix)
-- Download the [latest x86_64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_x86_64_20181130.tar.xz) (most computers) or the [latest arm64 Linux build](http://7bindustries.com/downloads/sliderule-cli_dev_Linux_arm64_20181130.tar.xz) (Raspberry Pi and Pinebook) of sliderule-cli.
+- Download the [latest x86_64 Linux build](https://github.com/7BIndustries/sliderule-cli/releases/download/v0.2.0/sliderule-cli_Linux_x86_64_v0.2.0.tar.gz) (most computers) or the [latest arm64 Linux build](https://github.com/7BIndustries/sliderule-cli/releases/download/v0.2.0/sliderule-cli_Linux_arm64_v0.2.0.tar.gz) (Raspberry Pi and Pinebook) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/bin`).
 - Run the command with the full path (i.e. `~/bin/sliderule-cli/sliderule-cli`).
 
@@ -43,7 +43,7 @@ $ ln -s ~/bin/sliderule-cli/sliderule-cli ~/bin/sr
 
 - [Install git](https://git-scm.com/download/mac)
 - [Install npm](https://www.npmjs.com/package/npm#apple-macintosh-computers)
-- Download the [latest MacOS build](http://7bindustries.com/downloads/sliderule-cli_dev_MacOS_20181130.zip) of sliderule-cli.
+- Download the [latest MacOS build](https://github.com/7BIndustries/sliderule-cli/releases/download/v0.2.0/sliderule-cli_MacOS_v0.2.0.zip) of sliderule-cli.
 - Extract the archive to a location in the `PATH` environment variable (i.e. `~/Applications`).
 - Run the command with the full path (i.e. `~/Applications/sliderule-cli/sliderule-cli`).
 
