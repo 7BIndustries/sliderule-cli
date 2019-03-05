@@ -67,6 +67,7 @@ Everything in Sliderule is a component, even the top level "project" component t
 7. Use `sliderule-cli upload` and provide a message when prompted to upload all of the changes made within the project's file structure to its remote repository. If the current project is not set up for a remote repository, the CLI will prompt for a URL. The remote repository must already exist, and is not created by the CLI.
 
 ### Command Listing
+
 - `sliderule-cli create [name] [-s SOURCE_LICENSE] [-d DOCUMENTATION_LICENSE]` - Creates a new component.
   - If the current directory is not a component, a `name` directory is created in the current directory, assuming the user has write access. The new directory is then initialized as a new top-level Sliderule project component, with files and directories being created as needed to match the Sliderule methodology.
   - If the current directory is already a component, creates a new local component `name` from scratch and places it within the `components` directory of the current project.
@@ -82,38 +83,33 @@ Everything in Sliderule is a component, even the top level "project" component t
 - `sliderule-cli licenses list` - Lists all of the licenses that are active for the current component.
 
 ### Options
+
 - `-y` - Answers yes to all questions for unattended operation.
 - `-v` - Provides verbose output that is helpful when debugging why an operation failed.
 
-## Compiling It Yourself
+## Building
 
 [sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before the following steps are followed.
 
 If [Rust is installed](https://www.rust-lang.org/en-US/install.html) on a Linux, Windows or Mac computer, follow the instructions for your platform below to build the program.
-### Linux & MacOS
-Note that `make.sh` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
 ```
 cargo build [--release]
 ```
-Once the build has completed successfully, the sliderule-cli binary should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable.
 
-### Windows
-Note that `make.cmd` is a wrapper script around cargo that will copy extra files that the CLI needs to run properly.
-```
-cargo build [--release]
-```
-Once the build has completed successfully, the sliderule-cli.exe binary should be located in `.\sliderule-cli\target\debug\`. Supply the full path to the sliderule-cli.exe binary to use it. Alternatively, add the path to sliderule-cli.exe to the `PATH` environment variable.
+### After Build - Linux & MacOS
+
+Once the build has completed successfully, the sliderule-cli binary should be located in `sliderule-cli/target/debug/`. Supply the full path to the sliderule-cli binary to use it. Alternatively, add the path to sliderule-cli to the `PATH` environment variable. Using a symbolic link or alias will allows for use a short command name like `sr` for convenience.
+
+### After Build - Windows
+
+Once the build has completed successfully, the sliderule-cli.exe binary should be located in `.\sliderule-cli\target\debug\`. Supply the full path to the sliderule-cli.exe binary to use it. Alternatively, add the path to sliderule-cli.exe to the `PATH` environment variable. [Setting an alias](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6) allows for use of a short command name like `sr` for convenience.
 
 ## Running Tests
 
-At this time, tests will only run in Linux and MacOS.
-
 [sliderule-rs](https://github.com/7BIndustries/sliderule-rs) needs to be cloned into the same parent directory as this CLI before these steps are followed.
 
-### Linux & MacOS
-
-If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command will execute the tests. Note that `make.sh` is a wrapper script around cargo because some files need to be copied before the tests are run.
+If [Rust is installed](https://www.rust-lang.org/en-US/install.html), running the following command in the root `sliderule-cli` directory will execute the tests.
 ```
 cargo test -- --test-threads=1
 ```
-The `test-threads` option is very important. If the tests are run in parallel (the default for cargo), they will fail randomly because they are interferring with each other. At this time the tests are only designed to run on Linux and MacOS.
+The `test-threads` option is very important. If the tests are run in parallel (the default for cargo), they will fail randomly because they will interfere with each other.
