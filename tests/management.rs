@@ -110,6 +110,59 @@ mod management {
 
     #[test]
     /*
+     * Tests the ability to download remote changes for a component
+     */
+    fn test_download_component_changes() {
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join(cargo_mode())
+            .join("sliderule-cli");
+
+        let temp_dir = env::temp_dir();
+
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
+
+        // Try to download the component's remote changes
+        let output = Command::new(cmd_path)
+            .args(&["download", "all"])
+            .current_dir(&test_dir.join("toplevel"))
+            .output()
+            .expect("failed to execute process");
+
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Component download finished."));
+    }
+
+    /*
+     * Tests the ability to download changes to the remote components housed within a component/project
+     */
+    #[test]
+    fn test_download_dependencies() {
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join(cargo_mode())
+            .join("sliderule-cli");
+
+        let temp_dir = env::temp_dir();
+
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
+
+        // Try to download the component's remote changes
+        let output = Command::new(cmd_path)
+            .args(&["download", "dependencies"])
+            .current_dir(&test_dir.join("toplevel"))
+            .output()
+            .expect("failed to execute process");
+
+        assert!(String::from_utf8_lossy(&output.stdout)
+            .contains("Component download of dependencies only finished."));
+    }
+
+    #[test]
+    /*
      * Tests the addition and removal of a remote component.
      */
     fn test_add_remove_component() {
