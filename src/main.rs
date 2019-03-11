@@ -1,10 +1,12 @@
 extern crate argparse;
+extern crate rpassword;
 extern crate sliderule;
 
 use argparse::{ArgumentParser, List, Store, StoreTrue};
 use sliderule::SROutput;
 use std::env;
 use std::io;
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -20,7 +22,7 @@ fn main() {
 
     // Some items for the command line help interface
     let app_description = "Tool to manage Sliderule projects.";
-    let cmd_description = "Sliderule command to run: [create | download | upload | add | remove | refactor | licenses ]";
+    let cmd_description = "Sliderule command to run: [create | download | upload | add | remove | refactor | licenses | login]";
     let args_description = "Arguments to Sliderule commands:
                             create [name],
                             download [all | dependencies | component_url],
@@ -200,6 +202,8 @@ fn main() {
             message = message.trim().to_string();
         }
 
+        let mut userinfo = (String::new(), String::new());
+
         // Make sure this project has already been initialized as a repository
         if !Path::new(".git").exists() && url.is_empty() {
             println!("This project has not been initialized with a repository yet. Enter a URL of an existing repository to upload this component to:");
@@ -209,9 +213,21 @@ fn main() {
                 .expect("ERROR: Failed to read name or URL from user.");
 
             url = url.trim().to_string();
+
+            // Check to see if there needs to be a username and password set for this
+            if url.contains("https") {
+                userinfo = get_https_user_info();
+            }
         }
 
-        let output = sliderule::upload_component(&get_cwd(), message, &url);
+        let mut user = None;
+        let mut pass = None;
+        if !userinfo.0.is_empty() && !userinfo.1.is_empty() {
+            user = Some(userinfo.0.trim().to_string());
+            pass = Some(userinfo.1.trim().to_string());
+        }
+
+        let output = sliderule::upload_component(&get_cwd(), message, url, user, pass);
 
         // Show extra output only when the user requests it
         if verbose {
@@ -327,6 +343,49 @@ fn main() {
             eprintln!("licenses subcommand not understood: {}", subcommand);
             std::process::exit(1);
         }
+    } else if command == "login" {
+        // Make sure this project has already been initialized as a repository
+        if url.is_empty() {
+            println!(
+                "Enter a URL of an existing repository to that this component will be uploaded to:"
+            );
+
+            io::stdin()
+                .read_line(&mut url)
+                .expect("ERROR: Failed to read name or URL from user.");
+
+            url = url.trim().to_string();
+        }
+
+        let mut userinfo = (String::new(), String::new());
+
+        // Check to see if there needs to be a username and password set for this
+        if url.contains("https") {
+            userinfo = get_https_user_info();
+        }
+
+        let mut user = None;
+        let mut pass = None;
+        if !userinfo.0.is_empty() && !userinfo.1.is_empty() {
+            user = Some(userinfo.0.trim().to_string());
+            pass = Some(userinfo.1.trim().to_string());
+        }
+
+        // If a URL is not present, it will mess up the git config
+        if url.is_empty() {
+            println!("URL cannot be empty when logging into a repository.");
+            std::process::exit(2);
+        }
+
+        // Change/add the login information for the user
+        let output = sliderule::remote_login(&get_cwd(), Some(url), user, pass);
+
+        // Show extra output only when the user requests it
+        if verbose {
+            print_stdout(&output);
+        } else {
+            println!("Finished setting username and password for remote repository.");
+        }
     }
 
     // The user has to supply a command, and it needs to be recognized
@@ -334,6 +393,28 @@ fn main() {
         println!("Please supply a command. Run with -h to see the options.");
         std::process::exit(1);
     }
+}
+
+/*
+ * Prompts the user for an https username and a password, with a warning that doing so is a security concern.
+ */
+fn get_https_user_info() -> (String, String) {
+    let mut username = String::new();
+    let password: String;
+
+    println!(
+        "You need to enter a username and password for using an https URL. Please do that now."
+    );
+    println!("WARNING: Using https with sliderule-cli can lead to passwords being stored in plain text. It is better to use ssh.");
+    print!("User: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut username)
+        .expect("ERROR: Failed to read username from user");
+
+    password = rpassword::prompt_password_stdout("Password: ").unwrap();
+
+    (username, password)
 }
 
 /*
