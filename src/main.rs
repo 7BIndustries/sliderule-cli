@@ -280,6 +280,8 @@ fn main() {
     } else if command == "refactor" {
         let name = &args[0];
 
+        let mut userinfo = (String::new(), String::new());
+
         if url.is_empty() {
             println!("Please enter the URL of an existing repository to upload the component to:");
 
@@ -290,8 +292,20 @@ fn main() {
             url = url.trim().to_string();
         }
 
+        // Check to see if there needs to be a username and password set for this
+        if url.contains("https") {
+            userinfo = get_https_user_info();
+        }
+
+        let mut user = None;
+        let mut pass = None;
+        if !userinfo.0.is_empty() && !userinfo.1.is_empty() {
+            user = Some(userinfo.0.trim().to_string());
+            pass = Some(userinfo.1.trim().to_string());
+        }
+
         // Convert the local component into a remote component
-        let output = sliderule::refactor(&get_cwd(), name.to_string(), url);
+        let output = sliderule::refactor(&get_cwd(), name.to_string(), url, user, pass);
 
         // Show extra output only when the user requests it
         if verbose {
