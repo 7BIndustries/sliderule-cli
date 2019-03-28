@@ -619,6 +619,24 @@ mod management {
         kill_git();
     }
 
+    #[test]
+    fn test_get_version() {
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join(cargo_mode())
+            .join("sliderule-cli");
+
+        // Request the version number from the app
+        let output = Command::new(&cmd_path)
+            .args(&["-V"])
+            .output()
+            .expect("failed to execute process");
+
+        assert!(String::from_utf8_lossy(&output.stdout).contains("sliderule-cli version: 0.3.1"));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("sliderule-rs version: 0.2.1"));
+    }
+
     // Cleans up the git daemon processes after tests run
     fn kill_git() {
         let info = os_info::get();

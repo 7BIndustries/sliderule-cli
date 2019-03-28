@@ -10,6 +10,8 @@ use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
 fn main() {
+    let _version_num = "0.3.1";
+
     // What main command the user is wanting to use
     let mut command = String::new();
     let mut args: Vec<String> = Vec::new();
@@ -19,6 +21,7 @@ fn main() {
     let mut url = String::new();
     let mut yes_mode_active = false;
     let mut verbose = false;
+    let mut version = false;
 
     // Some items for the command line help interface
     let app_description = "Tool to manage Sliderule projects.";
@@ -69,7 +72,21 @@ fn main() {
             StoreTrue,
             "Gives verbose output, helps with debugging why a command did not work.",
         );
+        ap.refer(&mut version).add_option(
+            &["-V"],
+            StoreTrue,
+            "Gives verbose output, helps with debugging why a command did not work.",
+        );
         ap.parse_args_or_exit();
+    }
+
+    // Check to see if the user wanted to see the version number
+    if version {
+        println!("sliderule-cli version: {}", _version_num);
+        println!("sliderule-rs version: {}", sliderule::get_version());
+
+        // We do not need to run any more code
+        std::process::exit(1);
     }
 
     // Handle the command line arguments
