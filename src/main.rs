@@ -72,11 +72,8 @@ fn main() {
             StoreTrue,
             "Gives verbose output, helps with debugging why a command did not work.",
         );
-        ap.refer(&mut version).add_option(
-            &["-V"],
-            StoreTrue,
-            "Outputs the version information.",
-        );
+        ap.refer(&mut version)
+            .add_option(&["-V"], StoreTrue, "Outputs the version information.");
         ap.parse_args_or_exit();
     }
 
