@@ -32,7 +32,8 @@ fn main() {
                             add [remote_component_url],
                             remove [name],
                             refactor [name],
-                            licenses [change | list]";
+                            licenses [change | list],
+                            changes [list]";
 
     // Parse the command line arguments
     {
@@ -413,6 +414,30 @@ fn main() {
             print_stdout(&output);
         } else {
             println!("Finished setting username and password for remote repository.");
+        }
+    } else if command == "changes" {
+        let subcommand = &args[0];
+
+        // Allow the user to do multiple things with the changes, currently just 'list'
+        if subcommand == "list" {
+            let change_listing = sliderule::list_changes(&get_cwd());
+
+            for line in change_listing.stdout {
+                let mut out_line = line.replace(
+                    "(use \"git add <file>...\" to include in what will be committed)",
+                    "",
+                );
+                out_line = out_line.replace("nothing added to commit but untracked files present (use \"git add\" to track)", "");
+                out_line = out_line.replace("Untracked files", "New files");
+
+                println!("{}", out_line);
+            }
+            // If we have any errors, let the user know what they are
+            if !change_listing.stderr.is_empty() {
+                for line in change_listing.stderr {
+                    println!("{}", line);
+                }
+            }
         }
     }
 

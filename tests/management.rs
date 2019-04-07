@@ -637,6 +637,32 @@ mod management {
         assert!(String::from_utf8_lossy(&output.stdout).contains("sliderule-rs version: 0.2.1"));
     }
 
+    #[test]
+    fn test_list_changes() {
+        let cmd_path = env::current_dir()
+            .unwrap()
+            .join("target")
+            .join(cargo_mode())
+            .join("sliderule-cli");
+
+        let temp_dir = env::temp_dir();
+
+        // Set up our temporary project directory for testing
+        let test_dir = set_up(&temp_dir, "toplevel");
+
+        // Change the license and verify
+        let output = Command::new(&cmd_path)
+            .args(&["changes", "list"])
+            .current_dir(&test_dir.join("toplevel"))
+            .output()
+            .expect("failed to execute process");
+
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("No changes."),
+            "A change to the component was listed when there were none."
+        );
+    }
+
     // Cleans up the git daemon processes after tests run
     fn kill_git() {
         let info = os_info::get();
