@@ -4,8 +4,8 @@ version = "0.3.1"
 authors = ["Jeremy Wright <wrightjmf@gmail.com>"]
 
 [dependencies]
-# sliderule = { path = "../sliderule-rs" }
-sliderule = { git = "https://github.com/7bindustries/sliderule-rs" }
+sliderule = { path = "../sliderule-rs" }
+# sliderule = { git = "https://github.com/7bindustries/sliderule-rs" }
 argparse = "0.2.2"
 os_info = "1.0.3"
 rpassword = "2.1.0"

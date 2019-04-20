@@ -19,6 +19,12 @@ fn main() {
     let mut docs_license = String::new();
     let mut message = String::new();
     let mut url = String::new();
+    let mut description = String::new();
+    let mut quantity = String::new();
+    let mut quantity_units = String::new();
+    let mut notes = String::new();
+    let mut list = String::new();
+    let mut item_name = String::new();
     let mut yes_mode_active = false;
     let mut verbose = false;
     let mut version = false;
@@ -27,7 +33,7 @@ fn main() {
     let app_description = "Tool to manage Sliderule projects.";
     let cmd_description = "Sliderule command to run: [create | download | upload | add | remove | refactor | licenses | login]";
     let args_description = "Arguments to Sliderule commands:
-                            create [name],
+                            create [name | list.item ] [description],
                             download [all | dependencies | component_url],
                             add [remote_component_url],
                             remove [name],
@@ -44,37 +50,70 @@ fn main() {
         ap.refer(&mut args)
             .add_argument("arguments", List, args_description);
         ap.refer(&mut src_license).add_option(
-            &["-s"],
+            &["-s", "--source-license"],
             Store,
             "Specify a source license on the command line.",
         );
         ap.refer(&mut docs_license).add_option(
-            &["-d"],
+            &["-d", "--doc-license"],
             Store,
             "Specify a documentation license on the command line.",
         );
         ap.refer(&mut message).add_option(
-            &["-m"],
+            &["-m", "--message"],
             Store,
             "Specifies the message to attach to changes on an upload.",
         );
         ap.refer(&mut url).add_option(
-            &["-u"],
+            &["-u", "--url"],
             Store,
             "The URL to use when uploading, downloading or adding a component.",
         );
         ap.refer(&mut yes_mode_active).add_option(
-            &["-y"],
+            &["-y", "--yes"],
             StoreTrue,
             "Answers yes to any questions for unattended operation.",
         );
         ap.refer(&mut verbose).add_option(
-            &["-v"],
+            &["-v", "--verbose"],
             StoreTrue,
             "Gives verbose output, helps with debugging why a command did not work.",
         );
-        ap.refer(&mut version)
-            .add_option(&["-V"], StoreTrue, "Outputs the version information.");
+        ap.refer(&mut version).add_option(
+            &["-V", "--version"],
+            StoreTrue,
+            "Outputs the version information.",
+        );
+        ap.refer(&mut description).add_option(
+            &["-d", "--description"],
+            Store,
+            "Specifies a description for a component.",
+        );
+        ap.refer(&mut quantity).add_option(
+            &["-q", "--quantity"],
+            Store,
+            "Specify the quantity for a component.",
+        );
+        ap.refer(&mut notes).add_option(
+            &["-n", "--notes"],
+            Store,
+            "Specify notes to be attached to a component.",
+        );
+        ap.refer(&mut list).add_option(
+            &["-l", "--list"],
+            Store,
+            "Specifies the list (parts or tools) that a component belongs to.",
+        );
+        ap.refer(&mut item_name).add_option(
+            &["-i", "--item-name"],
+            Store,
+            "Specifies the name of the item this component should be an option for.",
+        );
+        ap.refer(&mut quantity_units).add_option(
+            &["-z", "--quantity-units"],
+            Store,
+            "Specifies which units the quantity of the component is in.",
+        );
         ap.parse_args_or_exit();
     }
 
@@ -89,36 +128,177 @@ fn main() {
 
     // Handle the command line arguments
     if command == "create" {
-        let name = &args[0];
+        let mut name = String::from("");
 
-        // Only ask for licenses if they are not specified on the command line
-        if src_license.is_empty() || docs_license.is_empty() {
-            // Find out what licenses the user wants to use
-            let licenses = ask_for_licenses(false);
+        // TODO: Check if not top level, ask for these other things
+        if sliderule::get_level(&get_cwd()) == 0 {
+            if description.is_empty() {
+                // Ask for description and munge it into a name
+                description = ask_for_description();
+                name = sliderule::munge_component_description(&description);
 
-            // Handle the occurrence of someone specifying licenses on the command line
-            if src_license.is_empty() {
-                src_license = licenses.0;
+                // Only ask for licenses if they are not specified on the command line
+                if src_license.is_empty() || docs_license.is_empty() {
+                    // Find out what licenses the user wants to use
+                    let licenses = ask_for_licenses(false);
+
+                    // Handle the occurrence of someone specifying licenses on the command line
+                    if src_license.is_empty() {
+                        src_license = licenses.0;
+                    }
+                    if docs_license.is_empty() {
+                        docs_license = licenses.1;
+                    }
+                }
+
+                let output = sliderule::create_component(
+                    &get_cwd(),
+                    name.to_string(),
+                    src_license,
+                    docs_license,
+                );
+
+                // If we had an error, we need to display it and exit
+                if output.status != 0 {
+                    print_stdout(&output);
+                    print_stderr(&output);
+
+                    std::process::exit(1);
+                }
+                // Show extra output only when the user requests it
+                if verbose {
+                    print_stdout(&output);
+                } else {
+                    println!("Component creation finished.");
+                }
+
+                // Show error information when it happens, whether the user has requested verbose output or not
+                if !output.stderr.is_empty() {
+                    print_stderr(&output);
+                }
+
+                // TODO: Put the description into the readme
             }
-            if docs_license.is_empty() {
-                docs_license = licenses.1;
-            }
-        }
-
-        let output =
-            sliderule::create_component(&get_cwd(), name.to_string(), src_license, docs_license);
-
-        // Show extra output only when the user requests it
-        if verbose {
-            print_stdout(&output);
         } else {
-            println!("Component creation finished.");
+            if description.is_empty() {
+                // If the list doesn't exist already, ask the user for a description (note: this is separate from the item description)
+                description = ask_for_description();
+
+                name = sliderule::munge_component_description(&description);
+            }
+
+            // Only ask for licenses if they are not specified on the command line
+            if src_license.is_empty() || docs_license.is_empty() {
+                // Find out what licenses the user wants to use
+                let licenses = ask_for_licenses(false);
+
+                // Handle the occurrence of someone specifying licenses on the command line
+                if src_license.is_empty() {
+                    src_license = licenses.0;
+                }
+                if docs_license.is_empty() {
+                    docs_license = licenses.1;
+                }
+            }
+
+            // If necessary, ask the user for the list this component belongs to
+            if list.is_empty() {
+                list = ask_for_list();
+            }
+
+            // If necessary, ask the user for the item name of the component being added to the project
+            if item_name.is_empty() {
+                item_name = ask_for_item_name();
+            }
+
+            // Ask the user for the quantity, and ask for it if it wasn't specified on the command line
+            if quantity.is_empty() {
+                quantity = ask_for_quantity();
+            }
+
+            // If needed, ask the user for the quantity units
+            if quantity_units.is_empty() {
+                quantity_units = ask_for_quantity_units();
+            }
+
+            // If necessary, ask the user for the item notes and ask for them if they weren't specified on the command line
+            if notes.is_empty() {
+                notes = ask_for_item_notes();
+            }
+
+            let output = sliderule::insert_item(
+                &get_cwd(),
+                list,
+                item_name,
+                description,
+                quantity,
+                quantity_units,
+                notes,
+                name.to_string(),
+            );
+
+            // If we had an error, we need to display it and exit
+            if output.status != 0 {
+                print_stdout(&output);
+                print_stderr(&output);
+
+                std::process::exit(1);
+            }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component creation finished.");
+            }
+
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
+            }
+
+            let output = sliderule::create_component(
+                &get_cwd(),
+                name.to_string(),
+                src_license,
+                docs_license,
+            );
+
+            // If we had an error, we need to display it and exit
+            if output.status != 0 {
+                print_stdout(&output);
+                print_stderr(&output);
+
+                std::process::exit(1);
+            }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component creation finished.");
+            }
+
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
+            }
         }
 
-        // Show error information when it happens, whether the user has requested verbose output or not
-        if !output.stderr.is_empty() {
-            print_stderr(&output);
-        }
+    // If the name is a dotted string that starts with parts or tools, handle that accordingly in the parts.yaml and tools.yaml files
+    // if name.contains(".") {
+    //     let prefix_parts: Vec<&str> = name.split(".").collect();
+    //     let prefix = prefix_parts[0];
+
+    //     if prefix == "parts" || prefix == "tools" {
+    //         // Make sure that we have a description to go along with these
+    //         if args.len() < 2 {
+    //             println!("You must supply a description when creating a part or a tool.");
+    //             std::process::exit(1);
+    //         }
+
+    //         desc = sliderule::munge_component_description(&args[1]);
+    //         // name = &desc;
+    //     }
+    // }
     } else if command == "add" {
         // The user is expected to have provided a URL of a remote component that can be downloaded
         let url = &args[0];
@@ -490,6 +670,121 @@ fn print_stderr(output: &SROutput) {
             println!("{}", line);
         }
     }
+}
+
+/*
+ * Prompt the user to enter a component description
+ */
+fn ask_for_description() -> String {
+    let mut description = String::new();
+
+    print!("Please enter a description for this component: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut description)
+        .expect("ERROR: Failed to read the component description from the user.");
+
+    description = description.trim().to_string();
+
+    return description;
+}
+
+/*
+ * Prompt the user to enter the list that this component belongs to
+ */
+fn ask_for_list() -> String {
+    let mut list = String::new();
+
+    print!("Please enter which list this component belongs to (parts or tools) [parts]: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut list)
+        .expect("ERROR: Failed to read the component item list from the user.");
+
+    list = list.trim().to_string();
+
+    // Default to 'parts'
+    if list.is_empty() {
+        list = String::from("parts");
+    }
+
+    return list;
+}
+
+/*
+ * Prompt the user to enter the list item that this component should be attached to as an option
+ */
+fn ask_for_item_name() -> String {
+    let mut item_name = String::new();
+
+    print!("Please enter which list item this component should be attached to as an option: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut item_name)
+        .expect("ERROR: Failed to read the component item list from the user.");
+
+    item_name = item_name.trim().to_string();
+
+    return item_name;
+}
+
+/*
+ * Prompt the user for the quantity of the component that are required
+ */
+fn ask_for_quantity() -> String {
+    let mut quantity = String::new();
+
+    print!("Please enter a quantity for this component [1]: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut quantity)
+        .expect("ERROR: Failed to read the component quantity from the user.");
+
+    // Default to a quantity of 1
+    if quantity.is_empty() {
+        quantity = String::from("1");
+    }
+
+    return quantity;
+}
+
+/*
+ * Prompts the user for the units the component quantity is in
+ */
+fn ask_for_quantity_units() -> String {
+    let mut quantity_units = String::from("parts");
+
+    print!("Please enter the units for the quantity of this component [part]: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut quantity_units)
+        .expect("ERROR: Failed to read the component quantity from the user.");
+
+    // Default to a quantity of 1
+    if quantity_units.is_empty() {
+        quantity_units = String::from("part");
+    }
+
+    return quantity_units;
+}
+
+/*
+ * Prompts the user for notes to attach to the list item
+ */
+fn ask_for_item_notes() -> String {
+    let mut notes = String::new();
+
+    print!("Please enter any notes you would like attached to the list item [blank]: ");
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    io::stdin()
+        .read_line(&mut notes)
+        .expect("ERROR: Failed to read the component quantity from the user.");
+
+    if notes.is_empty() {
+        notes = String::from("''");
+    }
+
+    return notes;
 }
 
 /*

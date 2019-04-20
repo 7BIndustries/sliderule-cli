@@ -752,11 +752,23 @@ mod management {
     ) -> bool {
         let mut is_valid = true;
 
-        // Make sure the BoM data file exists
-        if !component_path.join("bom_data.yaml").exists() {
+        // Make sure the parts file exists
+        if !component_path.join("parts.yaml").exists() {
+            is_valid = false;
+            println!("The file {:?}/parts.yaml does not exist.", component_path);
+        }
+
+        // Make sure the tools file exists
+        if !component_path.join("tools.yaml").exists() {
+            is_valid = false;
+            println!("The file {:?}/tools.yaml does not exist.", component_path);
+        }
+
+        // Make sure that the precautions file exists
+        if !component_path.join("precautions.yaml").exists() {
             is_valid = false;
             println!(
-                "The file {:?}/bom_data.yaml does not exist.",
+                "The file {:?}/precautions.yaml does not exist.",
                 component_path
             );
         }
@@ -794,27 +806,12 @@ mod management {
             println!("The directory {:?}/source does not exist.", component_path);
         }
 
-        let bom_file = component_path.join("bom_data.yaml");
+        // let bom_file = component_path.join("bom_data.yaml");
         let package_file = component_path.join("package.json");
         let readme_file = component_path.join("README.md");
         let dot_file = component_path.join(".sr");
 
         // Check the content of the files and directories as appropriate here
-        if !file_contains_content(
-            &bom_file,
-            0,
-            &format!("# Bill of Materials Data for {}", component_name),
-        ) {
-            is_valid = false;
-            println!(
-                "The bill to materials file in {:?} does not contain the correct header.",
-                component_path
-            );
-        }
-        if !file_contains_content(&bom_file, 12, "-component_1") {
-            is_valid = false;
-            println!("The bill to materials file in {:?} does not contain the '-component_1' entry in the right place.", component_path);
-        }
         if !file_contains_content(
             &package_file,
             9999,
@@ -858,6 +855,21 @@ mod management {
             is_valid = false;
             println!("The .sr file in {:?} does not contain the the correct documentation license in the right place.", component_path);
         }
+        // if !file_contains_content(
+        //     &bom_file,
+        //     0,
+        //     &format!("# Bill of Materials Data for {}", component_name),
+        // ) {
+        //     is_valid = false;
+        //     println!(
+        //         "The bill to materials file in {:?} does not contain the correct header.",
+        //         component_path
+        //     );
+        // }
+        // if !file_contains_content(&bom_file, 12, "-component_1") {
+        //     is_valid = false;
+        //     println!("The bill to materials file in {:?} does not contain the '-component_1' entry in the right place.", component_path);
+        // }
 
         is_valid
     }
