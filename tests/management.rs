@@ -55,12 +55,15 @@ mod management {
                 "TestSourceLicense",
                 "-d",
                 "TestDocLicense",
-                "test_top",
+                "-D",
+                "Test Top",
+                "test-top",
             ])
             .current_dir(&test_dir)
             .output()
             .expect("failed to execute process");
-
+        println!("stdout: {}", String::from_utf8_lossy(&output.stdout).trim());
+        println!("stderr: {}", String::from_utf8_lossy(&output.stderr).trim());
         assert_eq!(
             String::from_utf8_lossy(&output.stdout).trim(),
             "Component creation finished."
@@ -68,8 +71,9 @@ mod management {
 
         // Verify that the proper directories and files within the top level component were created
         assert!(is_valid_component(
-            &test_dir.join("test_top"),
-            "test_top",
+            &test_dir.join("test-top"),
+            "test-top",
+            "Test Top",
             "TestSourceLicense",
             "TestDocLicense",
         ));
@@ -103,6 +107,7 @@ mod management {
         assert!(is_valid_component(
             &test_dir.join("blink_firmware"),
             "blink_firmware",
+            "Blink Firmware",
             "Unlicense",
             "CC0-1.0",
         ));
@@ -203,6 +208,7 @@ mod management {
                 .join("node_modules")
                 .join("arduino-sr"),
             "arduino-sr",
+            "Arduino",
             "Unlicense",
             "CC0-1.0",
         ));
@@ -449,6 +455,8 @@ mod management {
                 "NotASourceLicense",
                 "-d",
                 "NotADocLicense",
+                "-D",
+                "Top Comp",
                 "topcomp",
             ])
             .current_dir(test_dir)
@@ -558,7 +566,7 @@ mod management {
             .spawn()
             .expect("ERROR: Could not launch git daemon.");
 
-        // Verify that the directory was created
+        // Create the component
         let output = Command::new(&cmd_path)
             .args(&[
                 "create",
@@ -566,17 +574,19 @@ mod management {
                 "NotASourceLicense",
                 "-d",
                 "NotADocLicense",
+                "-D",
+                "Main Comp",
                 "-v",
-                "maincomp",
+                "main-comp",
             ])
             .current_dir(&test_dir)
             .output()
             .expect("failed to execute process");
 
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "maincomp component not successfully created."
+        // Verify that the component was created
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            "Finished setting up component."
         );
 
         // Create a local component
@@ -587,28 +597,39 @@ mod management {
                 "NotASourceLicense",
                 "-d",
                 "NotADocLicense",
+                "-D",
+                "Local",
+                "-l",
+                "parts",
+                "-i",
+                "local-item",
+                "-q",
+                "1",
+                "-Q",
+                "part",
+                "-n",
+                "''",
                 "-v",
                 "local",
             ])
-            .current_dir(test_dir.join("maincomp"))
+            .current_dir(test_dir.join("main-comp"))
             .output()
             .expect("failed to execute process");
 
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("Finished setting up component."),
-            "local component not successfully created."
-        );
+        assert!(String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .contains("Finished setting up component."));
 
         // Attempt to refactor the component to the remote
         Command::new(&cmd_path)
             .args(&["refactor", "-u", "git://127.0.0.1/remote", "local"])
-            .current_dir(test_dir.join("maincomp"))
+            .current_dir(test_dir.join("main-comp"))
             .output()
             .expect("failed to execute process");
 
         assert!(
-            test_dir.join("maincomp").exists(),
-            "the temporary maincomp directory does not exist."
+            test_dir.join("main-comp").exists(),
+            "the temporary main-comp directory does not exist."
         );
         assert!(
             test_dir.join("refactor").join("remote").exists(),
@@ -747,6 +768,7 @@ mod management {
     fn is_valid_component(
         component_path: &Path,
         component_name: &str,
+        component_desc: &str,
         source_license: &str,
         doc_license: &str,
     ) -> bool {
@@ -832,7 +854,11 @@ mod management {
             is_valid = false;
             println!("The README.md file in {:?} does not contain the the correct header entry in the right place.", component_path);
         }
-        if !file_contains_content(&readme_file, 1, "New Sliderule component.") {
+        if !file_contains_content(
+            &readme_file,
+            1,
+            &format!("{} - Sliderule component.", component_desc),
+        ) {
             is_valid = false;
             println!("The README.md file in {:?} does not contain the the correct Sliderule mention in the right place.", component_path);
         }

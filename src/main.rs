@@ -85,7 +85,7 @@ fn main() {
             "Outputs the version information.",
         );
         ap.refer(&mut description).add_option(
-            &["-d", "--description"],
+            &["-D", "--description"],
             Store,
             "Specifies a description for a component.",
         );
@@ -110,7 +110,7 @@ fn main() {
             "Specifies the name of the item this component should be an option for.",
         );
         ap.refer(&mut quantity_units).add_option(
-            &["-z", "--quantity-units"],
+            &["-Q", "--quantity-units"],
             Store,
             "Specifies which units the quantity of the component is in.",
         );
@@ -128,64 +128,64 @@ fn main() {
 
     // Handle the command line arguments
     if command == "create" {
-        let mut name = String::from("");
+        let name: String;
 
-        // TODO: Check if not top level, ask for these other things
+        // We handle a top level project differently than a local component that is being added
         if sliderule::get_level(&get_cwd()) == 0 {
             if description.is_empty() {
                 // Ask for description and munge it into a name
                 description = ask_for_description();
-                name = sliderule::munge_component_description(&description);
+            }
 
-                // Only ask for licenses if they are not specified on the command line
-                if src_license.is_empty() || docs_license.is_empty() {
-                    // Find out what licenses the user wants to use
-                    let licenses = ask_for_licenses(false);
+            name = sliderule::munge_component_description(&description);
 
-                    // Handle the occurrence of someone specifying licenses on the command line
-                    if src_license.is_empty() {
-                        src_license = licenses.0;
-                    }
-                    if docs_license.is_empty() {
-                        docs_license = licenses.1;
-                    }
+            // Only ask for licenses if they are not specified on the command line
+            if src_license.is_empty() || docs_license.is_empty() {
+                // Find out what licenses the user wants to use
+                let licenses = ask_for_licenses(false);
+
+                // Handle the occurrence of someone specifying licenses on the command line
+                if src_license.is_empty() {
+                    src_license = licenses.0;
                 }
-
-                let output = sliderule::create_component(
-                    &get_cwd(),
-                    name.to_string(),
-                    src_license,
-                    docs_license,
-                );
-
-                // If we had an error, we need to display it and exit
-                if output.status != 0 {
-                    print_stdout(&output);
-                    print_stderr(&output);
-
-                    std::process::exit(1);
+                if docs_license.is_empty() {
+                    docs_license = licenses.1;
                 }
-                // Show extra output only when the user requests it
-                if verbose {
-                    print_stdout(&output);
-                } else {
-                    println!("Component creation finished.");
-                }
+            }
 
-                // Show error information when it happens, whether the user has requested verbose output or not
-                if !output.stderr.is_empty() {
-                    print_stderr(&output);
-                }
+            let output = sliderule::create_component(
+                &get_cwd(),
+                name.to_string(),
+                description,
+                src_license,
+                docs_license,
+            );
 
-                // TODO: Put the description into the readme
+            // If we had an error, we need to display it and exit
+            if output.status != 0 {
+                print_stdout(&output);
+                print_stderr(&output);
+
+                std::process::exit(1);
+            }
+            // Show extra output only when the user requests it
+            if verbose {
+                print_stdout(&output);
+            } else {
+                println!("Component creation finished.");
+            }
+
+            // Show error information when it happens, whether the user has requested verbose output or not
+            if !output.stderr.is_empty() {
+                print_stderr(&output);
             }
         } else {
             if description.is_empty() {
                 // If the list doesn't exist already, ask the user for a description (note: this is separate from the item description)
                 description = ask_for_description();
-
-                name = sliderule::munge_component_description(&description);
             }
+
+            name = sliderule::munge_component_description(&description);
 
             // Only ask for licenses if they are not specified on the command line
             if src_license.is_empty() || docs_license.is_empty() {
@@ -230,7 +230,7 @@ fn main() {
                 &get_cwd(),
                 list,
                 item_name,
-                description,
+                description.clone(),
                 quantity,
                 quantity_units,
                 notes,
@@ -247,8 +247,9 @@ fn main() {
             // Show extra output only when the user requests it
             if verbose {
                 print_stdout(&output);
+                println!("Item component insertion finished.");
             } else {
-                println!("Component creation finished.");
+                println!("Item component insertion finished.");
             }
 
             // Show error information when it happens, whether the user has requested verbose output or not
@@ -259,6 +260,7 @@ fn main() {
             let output = sliderule::create_component(
                 &get_cwd(),
                 name.to_string(),
+                description,
                 src_license,
                 docs_license,
             );
@@ -273,6 +275,7 @@ fn main() {
             // Show extra output only when the user requests it
             if verbose {
                 print_stdout(&output);
+                println!("Component creation finished.");
             } else {
                 println!("Component creation finished.");
             }
